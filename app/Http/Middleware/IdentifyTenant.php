@@ -30,7 +30,13 @@ class IdentifyTenant
                 abort(404, 'Tenant not found.');
             }
 
-            if ($tenant->status !== 'active') {
+            if ($tenant->status !== 'active' && !$request->routeIs('tenant.billing.*') && !$request->routeIs('tenant.shop.*')) {
+                // We allow billing routes so they can pay to reactivate
+                // We also allow shop routes so customers can buy vouchers even if tenant admin is restricted? 
+                // Actually, if tenant is suspended, maybe shop should be closed. 
+                // But definitely Billing must be open.
+                
+                // Let's strictly allow billing for owner to pay
                 abort(403, 'Tenant account is ' . $tenant->status);
             }
 
