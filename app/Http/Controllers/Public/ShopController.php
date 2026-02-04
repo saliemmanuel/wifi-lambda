@@ -66,7 +66,7 @@ class ShopController extends Controller
                 'phone_number' => $request->phone_number,
                 'description' => $description,
                 'external_reference' => 'TENANT_' . $tenant->id . '_VOUCHER_' . $voucher->id . '_' . time(),
-                'notify_url' => route('webhook.campay'),
+                'notify_url' => rtrim(config('app.url'), '/') . '/webhook/campay',
             ]);
 
             if ($response && isset($response['reference'])) {
@@ -160,13 +160,17 @@ class ShopController extends Controller
             $phone = substr($phone, 3);
         }
         
-        if (str_starts_with($phone, '69') || str_starts_with($phone, '65')) {
+        if (str_starts_with($phone, '69') || str_starts_with($phone, '655') || str_starts_with($phone, '656') || str_starts_with($phone, '657') || str_starts_with($phone, '658') || str_starts_with($phone, '659')) {
             return 'orange_money';
-        } elseif (str_starts_with($phone, '67') || str_starts_with($phone, '650') || str_starts_with($phone, '651') || str_starts_with($phone, '652') || str_starts_with($phone, '653') || str_starts_with($phone, '654')) {
-            return 'mtn_mobile_money';
         }
         
-        return null;
+        // Moov check just in case
+        if (str_starts_with($phone, '62')) {
+            return 'moov_money';
+        }
+
+        // Default to MTN if unsure, to avoid null
+        return 'mtn_mobile_money';
     }
 
     public function checkStatus($tenant_slug, $reference)
