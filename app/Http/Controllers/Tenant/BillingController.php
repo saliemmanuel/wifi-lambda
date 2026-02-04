@@ -69,12 +69,12 @@ class BillingController extends Controller
             Payment::create([
                 'tenant_id' => $tenant->id,
                 'subscription_id' => $subscription->id,
-                'amount_fcfa' => '5', // TESTING
-                'amount_eur' => $newPlan->price_eur,
+                'amount_fcfa' => 5, // Convert to integer
+                'amount_eur' => (float)$newPlan->price_eur,
                 'payment_type' => 'subscription',
                 'status' => 'pending',
                 'campay_reference' => $response['reference'],
-                'campay_transaction_id' => $externalReference,
+                'campay_transaction_id' => $externalReference . '_' . time(), // Ensure uniqueness even in tests
                 'campay_status' => 'PENDING',
                 'payment_method' => $this->detectPaymentMethod($request->phone_number),
                 'phone_number' => $request->phone_number,
