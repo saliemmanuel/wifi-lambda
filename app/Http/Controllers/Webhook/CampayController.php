@@ -38,6 +38,7 @@ class CampayController extends Controller
                     'status' => 'completed',
                     'campay_status' => 'SUCCESSFUL',
                     'campay_transaction_id' => $data['operator_reference'] ?? $payment->campay_transaction_id,
+                    'campay_code' => $data['code'] ?? $payment->campay_code,
                     'paid_at' => now(),
                     'meta' => array_merge($payment->meta ?? [], ['webhook_data' => $data]),
                 ]);
@@ -85,6 +86,8 @@ class CampayController extends Controller
                                 'purchased_at' => now(),
                                 'purchase_amount_fcfa' => $payment->amount_fcfa,
                                 'campay_reference' => $reference,
+                                'campay_code' => $data['code'] ?? null,
+                                'operator_reference' => $data['operator_reference'] ?? null,
                                 'comment' => "Vendu via Webhook (Central) - Ref: {$reference}"
                             ]);
                         }
@@ -145,6 +148,8 @@ class CampayController extends Controller
                             'purchased_at' => now(),
                             'purchase_amount_fcfa' => $attempt->amount_fcfa,
                             'campay_reference' => $reference,
+                            'campay_code' => $data['code'] ?? null,
+                            'operator_reference' => $data['operator_reference'] ?? null,
                             'comment' => "Vendu via Webhook - Ref: {$reference}"
                         ]);
                     }

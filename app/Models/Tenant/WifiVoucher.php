@@ -37,6 +37,8 @@ class WifiVoucher extends TenantModel
         'ip_address',
         'comment',
         'campay_reference',
+        'campay_code',
+        'operator_reference',
     ];
 
     protected $casts = [

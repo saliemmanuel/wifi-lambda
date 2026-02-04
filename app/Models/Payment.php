@@ -23,6 +23,7 @@ class Payment extends Model
         'reseller_amount_fcfa',
         'campay_transaction_id',
         'campay_reference',
+        'campay_code',
         'campay_status',
         'payment_method',
         'phone_number',

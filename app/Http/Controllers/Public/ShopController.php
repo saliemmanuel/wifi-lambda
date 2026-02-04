@@ -104,7 +104,9 @@ class ShopController extends Controller
                 ]);
 
                 return response()->json([
-                    'campay_reference' => $response['reference']
+                    'campay_reference' => $response['reference'],
+                    'campay_code' => $response['code'] ?? null,
+                    'operator_reference' => $response['operator_reference'] ?? null
                 ]);
             }
 
@@ -183,6 +185,7 @@ class ShopController extends Controller
                 'status' => 'completed',
                 'campay_status' => 'SUCCESSFUL',
                 'campay_transaction_id' => $statusResp['operator_reference'] ?? $payment->campay_transaction_id,
+                'campay_code' => $statusResp['code'] ?? $payment->campay_code,
                 'paid_at' => now(),
             ]);
 
@@ -202,6 +205,8 @@ class ShopController extends Controller
                     'purchased_at' => now(),
                     'purchase_amount_fcfa' => $payment->amount_fcfa,
                     'campay_reference' => $reference,
+                    'campay_code' => $statusResp['code'] ?? null,
+                    'operator_reference' => $statusResp['operator_reference'] ?? null,
                     'comment' => "Vendu via Boutique - Ref: {$reference}"
                 ]);
 
@@ -249,7 +254,8 @@ class ShopController extends Controller
         // Try to find a successful payment attempt with this reference
         $payment = Payment::where(function($query) use ($reference) {
                 $query->where('campay_reference', $reference)
-                      ->orWhere('campay_transaction_id', $reference);
+                      ->orWhere('campay_transaction_id', $reference)
+                      ->orWhere('campay_code', $reference);
             })
             ->where('status', 'completed')
             ->first();
@@ -258,8 +264,11 @@ class ShopController extends Controller
             // Also check by searching inside the webhook data in meta if needed, but the above should cover it
             // if we correctly updated the campay_transaction_id.
             
-            // Fast check for voucher directly by reference
-            $voucher = WifiVoucher::where('campay_reference', $reference)->first();
+            // Fast check for voucher directly by any reference
+            $voucher = WifiVoucher::where('campay_reference', $reference)
+                ->orWhere('campay_code', $reference)
+                ->orWhere('operator_reference', $reference)
+                ->first();
             if ($voucher) {
                 return response()->json([
                     'status' => 'success',
