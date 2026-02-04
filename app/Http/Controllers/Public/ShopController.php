@@ -57,7 +57,8 @@ class ShopController extends Controller
             return response()->json(['error' => 'Désolé, plus de tickets disponibles pour ce forfait.'], 400);
         }
 
-        $amount = $package->price_fcfa;
+        //$amount = $package->price_fcfa;
+        $amount = 5; // TESTING: Hardcoded to 5 FCFA
         $description = "Achat Ticket Wi-Fi: {$package->name}";
 
         try {
