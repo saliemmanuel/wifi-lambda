@@ -13,18 +13,29 @@ class Payment extends Model
 
     protected $fillable = [
         'tenant_id',
+        'payment_type',
         'subscription_id',
-        'amount',
-        'currency',
-        'status', // pending, completed, failed
-        'method', // stripe, mobile_money, etc.
-        'transaction_id',
+        'amount_eur',
+        'ticket_id',
+        'client_user_id',
+        'amount_fcfa',
+        'platform_commission_fcfa',
+        'reseller_amount_fcfa',
+        'campay_transaction_id',
+        'campay_reference',
+        'campay_status',
+        'payment_method',
+        'phone_number',
+        'status',
         'paid_at',
         'meta',
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount_eur' => 'decimal:2',
+        'amount_fcfa' => 'integer',
+        'platform_commission_fcfa' => 'integer',
+        'reseller_amount_fcfa' => 'integer',
         'paid_at' => 'datetime',
         'meta' => 'array',
     ];
