@@ -37,6 +37,7 @@ class CampayController extends Controller
                 $payment->update([
                     'status' => 'completed',
                     'campay_status' => 'SUCCESSFUL',
+                    'campay_transaction_id' => $data['operator_reference'] ?? $payment->campay_transaction_id,
                     'paid_at' => now(),
                     'meta' => array_merge($payment->meta ?? [], ['webhook_data' => $data]),
                 ]);
@@ -130,6 +131,7 @@ class CampayController extends Controller
                     $attempt->update([
                         'status' => 'success',
                         'completed_at' => now(),
+                        'campay_transaction_id' => $data['operator_reference'] ?? $attempt->campay_transaction_id,
                         'meta' => array_merge($attempt->meta ?? [], ['webhook_data' => $data])
                     ]);
 

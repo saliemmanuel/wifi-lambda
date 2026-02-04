@@ -27,7 +27,8 @@ import {
     Ticket,
     ShieldCheck,
     Printer,
-    AlertTriangle
+    AlertTriangle,
+    Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -61,10 +62,13 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
 
     const [phoneNumber, setPhoneNumber] = useState('');
     const [isInitiating, setIsInitiating] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
 
     const openPaymentModal = (pkg: WifiPackage) => {
         if (pkg.available_count === 0) return;
         setSelectedPackage(pkg);
+        setPaymentError(null);
+        setCampayRef(null);
         setIsPaymentModalOpen(true);
     };
 
@@ -96,7 +100,7 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
             }
         } catch (error) {
             console.error("Payment Error:", error);
-            alert("Une erreur de connexion est survenue. Veuillez réessayer.");
+            setPaymentError("Une erreur de connexion est survenue. Veuillez réessayer.");
         } finally {
             setIsInitiating(false);
         }
@@ -107,11 +111,19 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
         const interval = setInterval(async () => {
             try {
                 const response = await fetch(`/${tenant_slug}/buy/check-status/${reference}`);
+                if (!response.ok) return; // Wait for next interval if server is down
+
                 const result = await response.json();
+
                 if (result.status === 'success') {
                     clearInterval(interval);
                     setIsCheckingStatus(false);
                     setPurchasedVoucher(result.voucher);
+                } else if (result.status === 'failed') {
+                    clearInterval(interval);
+                    setIsCheckingStatus(false);
+                    setPaymentError(result.message || "Le paiement a été annulé ou a échoué.");
+                    setCampayRef(null); // Return to form
                 }
             } catch (err) { }
         }, 5000);
@@ -134,6 +146,7 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
             const result = await response.json();
             if (result.status === 'success') {
                 setPurchasedVoucher(result.voucher);
+                setCampayRef(recoveryRef);
                 setIsRetrieveModalOpen(false);
                 setIsPaymentModalOpen(true);
             } else {
@@ -335,6 +348,13 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
 
                             {!campayRef ? (
                                 <form onSubmit={handleInitiatePayment} className="space-y-6">
+                                    {paymentError && (
+                                        <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold animate-in fade-in slide-in-from-top-2">
+                                            <AlertCircle className="size-5 shrink-0" />
+                                            <p>{paymentError}</p>
+                                        </div>
+                                    )}
+
                                     <div className="space-y-3">
                                         <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Numéro Mobile Money (Cameroun)</Label>
                                         <div className="relative group">
@@ -402,16 +422,19 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
                                     <div className="space-y-8">
                                         <div>
                                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Utilisateur</p>
-                                            <p className="text-4xl font-black tracking-tight text-slate-900">{purchasedVoucher.username}</p>
+                                            <p className="text-4xl font-black tracking-tight text-slate-900">{purchasedVoucher?.username}</p>
                                         </div>
                                         <div className="pt-8 border-t border-slate-200">
                                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Mot de passe</p>
-                                            <p className="text-4xl font-black tracking-tight text-slate-900">{purchasedVoucher.password}</p>
+                                            <p className="text-4xl font-black tracking-tight text-slate-900">{purchasedVoucher?.password}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="grid gap-3 pt-4">
+                                    <Button variant="outline" className="h-12 rounded-xl font-bold uppercase text-[11px] tracking-wider" onClick={() => window.open(`/${tenant_slug}/buy/download-pdf/${campayRef}`, '_blank')}>
+                                        <Download className="size-4 mr-2" /> Télécharger en PDF
+                                    </Button>
                                     <Button variant="outline" className="h-12 rounded-xl font-bold uppercase text-[11px] tracking-wider" onClick={printVoucher}>
                                         <Printer className="size-4 mr-2" /> Imprimer le ticket
                                     </Button>

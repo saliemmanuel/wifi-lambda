@@ -11,6 +11,7 @@ use App\Services\TenantService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ShopController extends Controller
 {
@@ -181,6 +182,7 @@ class ShopController extends Controller
             $payment->update([
                 'status' => 'completed',
                 'campay_status' => 'SUCCESSFUL',
+                'campay_transaction_id' => $statusResp['operator_reference'] ?? $payment->campay_transaction_id,
                 'paid_at' => now(),
             ]);
 
@@ -245,12 +247,30 @@ class ShopController extends Controller
         $reference = $request->reference;
 
         // Try to find a successful payment attempt with this reference
-        $payment = Payment::where('campay_reference', $reference)
+        $payment = Payment::where(function($query) use ($reference) {
+                $query->where('campay_reference', $reference)
+                      ->orWhere('campay_transaction_id', $reference);
+            })
             ->where('status', 'completed')
             ->first();
 
         if (!$payment) {
-            // Also check Campay just in case it's successful there but not updated here
+            // Also check by searching inside the webhook data in meta if needed, but the above should cover it
+            // if we correctly updated the campay_transaction_id.
+            
+            // Fast check for voucher directly by reference
+            $voucher = WifiVoucher::where('campay_reference', $reference)->first();
+            if ($voucher) {
+                return response()->json([
+                    'status' => 'success',
+                    'voucher' => [
+                        'username' => $voucher->username,
+                        'password' => $voucher->password,
+                    ]
+                ]);
+            }
+
+            // Fallback: Also check Campay just in case it's successful there but not updated here
             $statusResp = $this->campayService->checkTransactionStatus($reference);
             if ($statusResp && $statusResp['status'] === 'SUCCESSFUL') {
                 // If successful in Campay, try to find voucher by campay_reference
@@ -283,5 +303,33 @@ class ShopController extends Controller
                 'password' => $voucher->password,
             ]
         ]);
+    }
+
+    public function downloadPdf($tenant_slug, $reference)
+    {
+        $tenant = $this->tenantService->getCurrentTenant();
+        
+        // Find successful payment
+        $payment = Payment::where(function($query) use ($reference) {
+                $query->where('campay_reference', $reference)
+                      ->orWhere('campay_transaction_id', $reference);
+            })
+            ->where('status', 'completed')
+            ->firstOrFail();
+
+        $voucherId = $payment->ticket_id ?? $payment->meta['voucher_id'] ?? null;
+        $voucher = WifiVoucher::findOrFail($voucherId);
+
+        $data = [
+            'tenant_name' => $tenant->name,
+            'username' => $voucher->username,
+            'password' => $voucher->password,
+            'reference' => $reference,
+            'date' => $payment->paid_at ?? $payment->created_at,
+        ];
+
+        $pdf = Pdf::loadView('pdf.voucher', $data);
+        
+        return $pdf->download("Ticket_WiFi_{$reference}.pdf");
     }
 }

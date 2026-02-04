@@ -10,6 +10,7 @@ Route::prefix('{tenant_slug}')->middleware(['tenant'])->group(function () {
     Route::post('/buy/initiate', [\App\Http\Controllers\Public\ShopController::class, 'initiate'])->name('tenant.shop.initiate');
     Route::get('/buy/check-status/{reference}', [\App\Http\Controllers\Public\ShopController::class, 'checkStatus'])->name('tenant.shop.check-status');
     Route::post('/buy/retrieve', [\App\Http\Controllers\Public\ShopController::class, 'retrieveVoucher'])->name('tenant.shop.retrieve');
+    Route::get('/buy/download-pdf/{reference}', [\App\Http\Controllers\Public\ShopController::class, 'downloadPdf'])->name('tenant.shop.download-pdf');
 
     // Protected Routes - AUTH REQUIRED
     Route::middleware(['auth'])->group(function () {
