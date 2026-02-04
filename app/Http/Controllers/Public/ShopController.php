@@ -46,6 +46,9 @@ class ShopController extends Controller
             'phone_number' => 'required|string|min:9',
         ]);
 
+        // Fix: Retrieve tenant for reference generation
+        $tenant = $this->tenantService->getCurrentTenant();
+
         $package = WifiPackage::findOrFail($request->package_id);
         
         // Pick first available voucher for this package
