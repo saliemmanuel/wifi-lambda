@@ -46,11 +46,12 @@ class BillingController extends Controller
         
         // 1. Initiate Campay Payment
         $response = $this->campayService->collect([
-            // 'amount' => $newPlan->price_fcfa,
+            //'amount' => $newPlan->price_fcfa,
             'amount' => '5', // TESTING: Hardcoded to 5 FCFA
             'phone_number' => $request->phone_number,
             'description' => $description,
             'external_reference' => $externalReference,
+            'notify_url' => route('webhook.campay'),
         ]);
 
         if ($response && isset($response['reference'])) {

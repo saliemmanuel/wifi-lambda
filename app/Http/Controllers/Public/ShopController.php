@@ -65,7 +65,8 @@ class ShopController extends Controller
                 'amount' => $amount,
                 'phone_number' => $request->phone_number,
                 'description' => $description,
-                'external_reference' => 'VOUCHER_' . time() . '_' . $voucher->id
+                'external_reference' => 'TENANT_' . $tenant->id . '_VOUCHER_' . $voucher->id . '_' . time(),
+                'notify_url' => route('webhook.campay'),
             ]);
 
             if ($response && isset($response['reference'])) {

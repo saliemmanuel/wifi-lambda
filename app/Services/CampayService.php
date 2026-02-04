@@ -73,6 +73,7 @@ class CampayService
                 'from' => $this->formatPhoneNumber($data['phone_number']),
                 'description' => $data['description'],
                 'external_reference' => $data['external_reference'] ?? null,
+                'notify_url' => $data['notify_url'] ?? null,
             ]);
 
             if (!$response->successful()) {

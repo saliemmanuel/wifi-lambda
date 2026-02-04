@@ -22,6 +22,7 @@ export default function BillingIndex({ tenant, plans }: Props) {
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isCheckingStatus, setIsCheckingStatus] = useState(false);
     const [campayRef, setCampayRef] = useState<string | null>(null);
+    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Paramètres', href: '#' },
@@ -36,6 +37,8 @@ export default function BillingIndex({ tenant, plans }: Props) {
     const openPaymentModal = (plan: Plan) => {
         setSelectedPlan(plan);
         setData('plan_id', plan.id);
+        setPaymentStatus('idle');
+        setCampayRef(null);
         setIsPaymentModalOpen(true);
     };
 
@@ -46,6 +49,7 @@ export default function BillingIndex({ tenant, plans }: Props) {
                 const ref = page.props.flash?.campay_reference;
                 if (ref) {
                     setCampayRef(ref);
+                    setPaymentStatus('pending');
                     startStatusCheck(ref);
                 }
             }
@@ -62,9 +66,16 @@ export default function BillingIndex({ tenant, plans }: Props) {
                 if (result.status === 'success') {
                     clearInterval(interval);
                     setIsCheckingStatus(false);
-                    setIsPaymentModalOpen(false);
-                    reset();
-                    window.location.reload();
+                    setPaymentStatus('success');
+
+                    // Small delay before reload to let user see success message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else if (result.status === 'failed') {
+                    clearInterval(interval);
+                    setIsCheckingStatus(false);
+                    setPaymentStatus('failed');
                 }
             } catch (err) {
                 console.error("Status check failed", err);
@@ -214,7 +225,9 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                 <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span>Total à payer</span>
-                                        <span className="font-bold">{selectedPlan?.price_fcfa.toLocaleString()} FCFA</span>
+                                        <span className="font-bold">
+                                            {selectedPlan?.price_fcfa.toLocaleString()} FCFA
+                                        </span>
                                     </div>
                                 </div>
 
@@ -223,6 +236,46 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                     Payer maintenant
                                 </Button>
                             </form>
+                        ) : paymentStatus === 'success' ? (
+                            <div className="py-10 text-center space-y-6 animate-in fade-in zoom-in duration-300">
+                                <div className="flex justify-center">
+                                    <div className="h-24 w-24 rounded-full bg-green-100 flex items-center justify-center">
+                                        <CheckCircle2 className="h-12 w-12 text-green-600" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-bold text-2xl text-green-700">Paiement Réussi !</h4>
+                                    <p className="text-muted-foreground">
+                                        Votre abonnement au plan <strong>{selectedPlan?.name}</strong> est maintenant actif.
+                                    </p>
+                                </div>
+                                <p className="text-sm text-muted-foreground animate-pulse">
+                                    Redirection en cours...
+                                </p>
+                            </div>
+                        ) : paymentStatus === 'failed' ? (
+                            <div className="py-10 text-center space-y-6">
+                                <div className="flex justify-center">
+                                    <div className="h-20 w-20 rounded-full bg-red-100 flex items-center justify-center">
+                                        <AlertCircle className="h-10 w-10 text-red-600" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-bold text-xl text-red-700">Échec du paiement</h4>
+                                    <p className="text-muted-foreground">
+                                        La transaction a été annulée ou a échoué.
+                                    </p>
+                                </div>
+                                <Button
+                                    className="w-full"
+                                    onClick={() => {
+                                        setCampayRef(null);
+                                        setPaymentStatus('idle');
+                                    }}
+                                >
+                                    Réessayer
+                                </Button>
+                            </div>
                         ) : (
                             <div className="py-6 text-center space-y-6">
                                 <div className="flex justify-center">
@@ -233,7 +286,7 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                 <div className="space-y-2">
                                     <h4 className="font-bold text-xl">Confirmation requise</h4>
                                     <p className="text-muted-foreground px-4">
-                                        Veuillez approuver le retrait de <span className="text-foreground font-semibold">{selectedPlan?.price_fcfa.toLocaleString()} FCFA</span> sur votre téléphone.
+                                        Veuillez approuver le retrait sur votre téléphone.
                                     </p>
                                 </div>
 
