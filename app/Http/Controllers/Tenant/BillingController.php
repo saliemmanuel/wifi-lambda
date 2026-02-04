@@ -51,7 +51,7 @@ class BillingController extends Controller
             'phone_number' => $request->phone_number,
             'description' => $description,
             'external_reference' => $externalReference,
-            'notify_url' => route('webhook.campay'),
+            'notify_url' => rtrim(config('app.url'), '/') . '/webhook/campay',
         ]);
 
         if ($response && isset($response['reference'])) {
