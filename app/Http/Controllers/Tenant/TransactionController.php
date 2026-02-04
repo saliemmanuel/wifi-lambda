@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant\PaymentAttempt;
+use App\Models\Payment;
 use App\Models\Tenant\WifiVoucher;
+use App\Services\TenantService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class TransactionController extends Controller
 {
+    public function __construct(
+        protected TenantService $tenantService
+    ) {}
+
     public function index(Request $request, $tenant_slug)
     {
         $status = $request->input('status');
@@ -17,18 +22,20 @@ class TransactionController extends Controller
         $dateEnd = $request->input('date_end');
         $search = $request->input('search');
 
-        $query = PaymentAttempt::query()->with(['user']);
+        $tenant = $this->tenantService->getCurrentTenant();
+        $query = Payment::where('tenant_id', $tenant->id)
+            ->where('payment_type', 'ticket');
 
         if ($status && $status !== 'all') {
             $query->where('status', $status);
         }
 
         if ($dateStart) {
-            $query->whereDate('attempted_at', '>=', $dateStart);
+            $query->whereDate('created_at', '>=', $dateStart);
         }
 
         if ($dateEnd) {
-            $query->whereDate('attempted_at', '<=', $dateEnd);
+            $query->whereDate('created_at', '<=', $dateEnd);
         }
 
         if ($search) {
@@ -39,7 +46,7 @@ class TransactionController extends Controller
             });
         }
 
-        $transactions = $query->latest('attempted_at')->paginate(20)->withQueryString();
+        $transactions = $query->latest()->paginate(20)->withQueryString();
 
         return Inertia::render('tenant/transactions/index', [
             'transactions' => $transactions,
@@ -54,15 +61,15 @@ class TransactionController extends Controller
 
     public function show($tenant_slug, $id)
     {
-        $transaction = PaymentAttempt::with(['user'])->findOrFail($id);
+        $transaction = Payment::findOrFail($id);
         
         // Get associated voucher if exists
         $voucher = null;
         $package = null;
         $zone = null;
         
-        if ($transaction->reference) {
-            $voucher = WifiVoucher::where('campay_reference', $transaction->reference)
+        if ($transaction->campay_reference) {
+            $voucher = WifiVoucher::where('campay_reference', $transaction->campay_reference)
                 ->with(['package.router'])
                 ->first();
             

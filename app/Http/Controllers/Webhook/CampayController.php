@@ -69,6 +69,26 @@ class CampayController extends Controller
                         }
                     }
                 }
+
+                // Handle Ticket (Voucher) Payment
+                if ($payment->payment_type === 'ticket' && $payment->ticket_id) {
+                    $tenant = \App\Models\Tenant::find($payment->tenant_id);
+                    if ($tenant) {
+                        $tenantService = app(\App\Services\TenantService::class);
+                        $tenantService->switchTo($tenant);
+
+                        $voucher = \App\Models\Tenant\WifiVoucher::find($payment->ticket_id);
+                        if ($voucher && $voucher->status === 'available') {
+                            $voucher->update([
+                                'status' => 'sold',
+                                'purchased_at' => now(),
+                                'purchase_amount_fcfa' => $payment->amount_fcfa,
+                                'campay_reference' => $reference,
+                                'comment' => "Vendu via Webhook (Central) - Ref: {$reference}"
+                            ]);
+                        }
+                    }
+                }
             } elseif ($status === 'FAILED') {
                 $payment->update([
                     'status' => 'failed',

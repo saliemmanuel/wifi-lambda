@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\WifiPackage;
 use App\Models\Tenant\WifiVoucher;
-use App\Models\Tenant\PaymentAttempt;
+use App\Models\Payment;
 use App\Services\CampayService;
 use App\Services\TenantService;
 use Illuminate\Http\Request;
@@ -74,29 +74,32 @@ class ShopController extends Controller
             ]);
 
             if ($response && isset($response['reference'])) {
-                // Success - Pending
-                PaymentAttempt::create([
-                    'reference' => $response['reference'],
-                    'amount' => $amount,
+                // Success - Create Pending Payment Record in Central DB (inspired by BillingController)
+                Payment::create([
+                    'tenant_id' => $tenant->id,
+                    'payment_type' => 'ticket',
+                    'ticket_id' => $voucher->id,
                     'amount_fcfa' => $amount,
-                    'phone_number' => $request->phone_number,
-                    'campay_transaction_id' => $response['reference'],
-                    'payment_method' => $this->detectPaymentMethod($request->phone_number),
                     'status' => 'pending',
-                    'attempted_at' => now(),
+                    'campay_reference' => $response['reference'],
+                    'campay_transaction_id' => ($response['external_reference'] ?? 'VOUCH_' . time()) . '_' . time(),
+                    'campay_status' => 'PENDING',
+                    'payment_method' => $this->detectPaymentMethod($request->phone_number),
+                    'phone_number' => $request->phone_number,
                     'meta' => [
                         'package_id' => $package->id,
                         'package_name' => $package->name,
                         'voucher_id' => $voucher->id,
                         'type' => 'voucher_sale',
                         'description' => $description,
-                        'external_reference' => $response['external_reference'] ?? null,
+                        'campay_response' => $response
                     ]
                 ]);
 
-                Log::info("Payment initiated", [
+                Log::info("Payment initiated for voucher", [
                     'reference' => $response['reference'],
-                    'amount' => $amount
+                    'amount' => $amount,
+                    'tenant_id' => $tenant->id
                 ]);
 
                 return response()->json([
@@ -104,54 +107,23 @@ class ShopController extends Controller
                 ]);
             }
 
-            // API Call Failed (returned null or no reference)
-            PaymentAttempt::create([
-                'reference' => 'FAIL_' . time() . '_' . rand(1000, 9999), 
-                'amount' => $amount,
-                'amount_fcfa' => $amount,
-                'phone_number' => $request->phone_number,
-                'payment_method' => $this->detectPaymentMethod($request->phone_number),
-                'status' => 'failed',
-                'failure_reason' => 'Payment initialization failed (No reference returned)',
-                'attempted_at' => now(),
-                'meta' => [
-                    'package_id' => $package->id,
-                    'package_name' => $package->name,
-                    'voucher_id' => $voucher->id,
-                    'type' => 'voucher_sale',
-                    'description' => $description,
-                    'api_response' => $response ?? null
-                ]
-            ]);
+            // API Call Failed - Prepare error message like in BillingController
+            $errorMessage = 'Échec de l\'initialisation du paiement avec Campay.';
+            if (isset($response['message'])) {
+                $errorMessage .= ' ' . $response['message'];
+            } elseif (isset($response['detail'])) {
+                $errorMessage .= ' ' . $response['detail'];
+            }
 
-            return response()->json(['error' => 'Échec de l\'initialisation du paiement.'], 400);
+            return response()->json(['error' => $errorMessage], 400);
 
         } catch (\Exception $e) {
-            // Exception Occurred
             Log::error("Payment initiation exception", [
                 'error' => $e->getMessage(),
                 'phone' => $request->phone_number
             ]);
 
-            PaymentAttempt::create([
-                'reference' => 'ERR_' . time() . '_' . rand(1000, 9999),
-                'amount' => $amount,
-                'amount_fcfa' => $amount,
-                'phone_number' => $request->phone_number,
-                'payment_method' => $this->detectPaymentMethod($request->phone_number),
-                'status' => 'failed',
-                'failure_reason' => $e->getMessage(),
-                'attempted_at' => now(),
-                'meta' => [
-                    'package_id' => $package->id,
-                    'package_name' => $package->name,
-                    'voucher_id' => $voucher->id,
-                    'type' => 'voucher_sale',
-                    'description' => $description
-                ]
-            ]);
-
-            return response()->json(['error' => 'Erreur lors de l\'initialisation du paiement.'], 500);
+            return response()->json(['error' => 'Erreur technique lors de l\'initialisation : ' . $e->getMessage()], 500);
         }
     }
 
@@ -180,59 +152,63 @@ class ShopController extends Controller
     public function checkStatus($tenant_slug, $reference)
     {
         $statusResp = $this->campayService->checkTransactionStatus($reference);
-        
-        if ($statusResp && $statusResp['status'] === 'SUCCESSFUL') {
-            $attempt = PaymentAttempt::where('reference', $reference)->first();
-            
-            if ($attempt && $attempt->status !== 'success') {
-                // Update payment attempt to success
-                $attempt->update([
-                    'status' => 'success',
-                    'completed_at' => now(),
-                    'meta' => array_merge($attempt->meta ?? [], [
-                        'campay_status' => $statusResp,
-                        'completed_by' => 'system',
-                    ])
-                ]);
+        $payment = Payment::where('campay_reference', $reference)->first();
 
-                Log::info("Payment successful", [
-                    'reference' => $reference,
-                    'amount' => $attempt->amount_fcfa,
-                    'phone' => $attempt->phone_number
-                ]);
-                
-                // Finalize voucher sale
-                $voucherId = $attempt->meta['voucher_id'] ?? null;
-                $voucher = WifiVoucher::find($voucherId);
-                
-                if ($voucher && $voucher->status === 'available') {
-                    $voucher->update([
-                        'status' => 'sold',
-                        'purchased_at' => now(),
-                        'purchase_amount_fcfa' => $attempt->amount_fcfa,
-                        'campay_reference' => $reference,
-                        'comment' => "Vendu via Boutique - Ref: {$reference}"
-                    ]);
+        if (!$payment) {
+            return response()->json(['status' => 'error', 'message' => 'Transaction introuvable']);
+        }
 
-                    Log::info("Voucher sold", [
-                        'voucher_id' => $voucher->id,
-                        'username' => $voucher->username,
-                        'reference' => $reference
-                    ]);
-                    
-                    return response()->json([
-                        'status' => 'success',
-                        'voucher' => [
-                            'username' => $voucher->username,
-                            'password' => $voucher->password,
-                        ]
-                    ]);
-                }
+        if ($payment->status === 'completed') {
+            // If already successful, return the voucher if found
+            $voucher = WifiVoucher::where('campay_reference', $reference)->first();
+            if (!$voucher && isset($payment->ticket_id)) {
+                $voucher = WifiVoucher::find($payment->ticket_id);
             }
 
-            // If already successful, still return the voucher if found
-            $voucher = WifiVoucher::where('campay_reference', $reference)->first();
             if ($voucher) {
+                return response()->json([
+                    'status' => 'success',
+                    'voucher' => [
+                        'username' => $voucher->username,
+                        'password' => $voucher->password,
+                    ]
+                ]);
+            }
+        }
+        
+        if ($statusResp && $statusResp['status'] === 'SUCCESSFUL') {
+            // Update payment to success
+            $payment->update([
+                'status' => 'completed',
+                'campay_status' => 'SUCCESSFUL',
+                'paid_at' => now(),
+            ]);
+
+            Log::info("Voucher Payment successful", [
+                'reference' => $reference,
+                'amount' => $payment->amount_fcfa,
+                'phone' => $payment->phone_number
+            ]);
+            
+            // Finalize voucher sale
+            $voucherId = $payment->ticket_id ?? $payment->meta['voucher_id'] ?? null;
+            $voucher = WifiVoucher::find($voucherId);
+            
+            if ($voucher && $voucher->status === 'available') {
+                $voucher->update([
+                    'status' => 'sold',
+                    'purchased_at' => now(),
+                    'purchase_amount_fcfa' => $payment->amount_fcfa,
+                    'campay_reference' => $reference,
+                    'comment' => "Vendu via Boutique - Ref: {$reference}"
+                ]);
+
+                Log::info("Voucher sold", [
+                    'voucher_id' => $voucher->id,
+                    'username' => $voucher->username,
+                    'reference' => $reference
+                ]);
+                
                 return response()->json([
                     'status' => 'success',
                     'voucher' => [
@@ -243,23 +219,18 @@ class ShopController extends Controller
             }
         } elseif ($statusResp && in_array($statusResp['status'], ['FAILED', 'CANCELLED'])) {
             // Update failed/cancelled attempts
-            $attempt = PaymentAttempt::where('reference', $reference)->first();
-            if ($attempt && $attempt->status === 'pending') {
-                $attempt->update([
-                    'status' => strtolower($statusResp['status']),
-                    'completed_at' => now(),
-                    'failure_reason' => $statusResp['reason'] ?? 'Transaction failed',
-                    'meta' => array_merge($attempt->meta ?? [], [
-                        'campay_status' => $statusResp,
-                    ])
+            if ($payment->status === 'pending') {
+                $payment->update([
+                    'status' => 'failed',
+                    'campay_status' => $statusResp['status'],
                 ]);
 
-                Log::warning("Payment failed/cancelled", [
+                Log::warning("Voucher Payment failed/cancelled", [
                     'reference' => $reference,
                     'status' => $statusResp['status'],
-                    'reason' => $statusResp['reason'] ?? 'Unknown'
                 ]);
             }
+            return response()->json(['status' => 'failed', 'message' => 'Paiement échoué']);
         }
 
         return response()->json(['status' => $statusResp['status'] ?? 'pending']);
@@ -274,11 +245,11 @@ class ShopController extends Controller
         $reference = $request->reference;
 
         // Try to find a successful payment attempt with this reference
-        $attempt = PaymentAttempt::where('reference', $reference)
-            ->where('status', 'success')
+        $payment = Payment::where('campay_reference', $reference)
+            ->where('status', 'completed')
             ->first();
 
-        if (!$attempt) {
+        if (!$payment) {
             // Also check Campay just in case it's successful there but not updated here
             $statusResp = $this->campayService->checkTransactionStatus($reference);
             if ($statusResp && $statusResp['status'] === 'SUCCESSFUL') {
@@ -298,7 +269,7 @@ class ShopController extends Controller
             return response()->json(['error' => 'Référence introuvable ou paiement non validé.'], 404);
         }
 
-        $voucherId = $attempt->meta['voucher_id'] ?? null;
+        $voucherId = $payment->ticket_id ?? $payment->meta['voucher_id'] ?? null;
         $voucher = WifiVoucher::find($voucherId);
 
         if (!$voucher) {
