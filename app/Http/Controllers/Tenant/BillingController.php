@@ -74,9 +74,9 @@ class BillingController extends Controller
                 'payment_type' => 'subscription',
                 'status' => 'pending',
                 'campay_reference' => $response['reference'],
-                'campay_transaction_id' => $externalReference, // Using our ref as ID mapped if needed, or null
+                'campay_transaction_id' => $externalReference,
                 'campay_status' => 'PENDING',
-                'payment_method' => 'mobile_money',
+                'payment_method' => $this->detectPaymentMethod($request->phone_number),
                 'phone_number' => $request->phone_number,
                 'meta' => [
                     'plan_id' => $newPlan->id,
@@ -96,6 +96,20 @@ class BillingController extends Controller
         }
 
         return back()->withErrors(['error' => $errorMessage]);
+    }
+
+    private function detectPaymentMethod($phoneNumber)
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phoneNumber);
+        if (str_starts_with($phone, '237')) {
+            $phone = substr($phone, 3);
+        }
+        
+        if (str_starts_with($phone, '69') || str_starts_with($phone, '655') || str_starts_with($phone, '656') || str_starts_with($phone, '657') || str_starts_with($phone, '658') || str_starts_with($phone, '659')) {
+            return 'orange_money';
+        } 
+        
+        return 'mtn_mobile_money'; // Default for other 67, 68, 650-654
     }
 
     public function checkStatus($tenant_slug, $reference)
