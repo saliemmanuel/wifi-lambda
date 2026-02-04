@@ -109,11 +109,17 @@ class BillingController extends Controller
             $phone = substr($phone, 3);
         }
         
+        // Accurate detection for Cameroon
         if (str_starts_with($phone, '69') || str_starts_with($phone, '655') || str_starts_with($phone, '656') || str_starts_with($phone, '657') || str_starts_with($phone, '658') || str_starts_with($phone, '659')) {
             return 'orange_money';
         } 
         
-        return 'mtn_mobile_money'; // Default for other 67, 68, 650-654
+        // Moov is not common in CM but keeping for enum safety if detected
+        if (str_starts_with($phone, '62')) {
+            return 'moov_money';
+        }
+
+        return 'mtn_mobile_money'; // Strictly return a valid ENUM value
     }
 
     public function checkStatus($tenant_slug, $reference)
