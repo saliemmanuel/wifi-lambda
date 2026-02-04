@@ -1,0 +1,14 @@
+node_modules
+vendor
+.git
+.idea
+.vscode
+public/build
+public/hot
+storage/*.key
+**/.DS_Store
+Thumbs.db
+npm-debug.log
+yarn-error.log
+deploy.sh
+DEPLOYMENT.md

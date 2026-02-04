@@ -1,0 +1,49 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/production/Dockerfile
+        image: wifi-lambda:latest
+        restart: unless-stopped
+        ports:
+            - "${APP_PORT:-8080}:80"
+        environment:
+            APP_ENV: production
+            APP_DEBUG: 'false'
+            DB_HOST: db
+            REDIS_HOST: redis
+        env_file: .env
+        depends_on:
+            - db
+            - redis
+        networks:
+            - app-network
+
+    db:
+        image: mysql:8.0
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+        volumes:
+            - db-data:/var/lib/mysql
+        networks:
+            - app-network
+
+    redis:
+        image: redis:alpine
+        restart: unless-stopped
+        volumes:
+            - redis-data:/data
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    db-data:
+    redis-data:
