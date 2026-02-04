@@ -54,38 +54,42 @@ class BillingController extends Controller
             'notify_url' => rtrim(config('app.url'), '/') . '/webhook/campay',
         ]);
 
-        if ($response && isset($response['reference'])) {
-            // ... (success logic) ...
-            // 2. Create Incomplete/Suspended Subscription
-            $subscription = Subscription::create([
-                'tenant_id' => $tenant->id,
-                'plan_id' => $newPlan->id,
-                'status' => 'suspended', // Suspended until paid
-                'amount_eur' => $newPlan->price_eur,
-                'auto_renew' => true,
-            ]);
-
-            // 3. Create Pending Payment Record
-            Payment::create([
-                'tenant_id' => $tenant->id,
-                'subscription_id' => $subscription->id,
-                'amount_fcfa' => 5, // Convert to integer
-                'amount_eur' => (float)$newPlan->price_eur,
-                'payment_type' => 'subscription',
-                'status' => 'pending',
-                'campay_reference' => $response['reference'],
-                'campay_transaction_id' => $externalReference . '_' . time(), // Ensure uniqueness even in tests
-                'campay_status' => 'PENDING',
-                'payment_method' => $this->detectPaymentMethod($request->phone_number),
-                'phone_number' => $request->phone_number,
-                'meta' => [
+        try {
+            if ($response && isset($response['reference'])) {
+                // 2. Create Incomplete/Suspended Subscription
+                $subscription = Subscription::create([
+                    'tenant_id' => $tenant->id,
                     'plan_id' => $newPlan->id,
-                    'campay_response' => $response
-                ]
-            ]);
+                    'status' => 'suspended',
+                    'amount_eur' => (float)$newPlan->price_eur,
+                    'auto_renew' => true,
+                ]);
 
-            return back()->with('campay_reference', $response['reference'])
-                         ->with('message', 'Veuillez confirmer le paiement sur votre téléphone.');
+                // 3. Create Pending Payment Record
+                Payment::create([
+                    'tenant_id' => $tenant->id,
+                    'subscription_id' => $subscription->id,
+                    'amount_fcfa' => 5,
+                    'amount_eur' => (float)$newPlan->price_eur,
+                    'payment_type' => 'subscription',
+                    'status' => 'pending',
+                    'campay_reference' => $response['reference'],
+                    'campay_transaction_id' => $externalReference . '_' . time(),
+                    'campay_status' => 'PENDING',
+                    'payment_method' => $this->detectPaymentMethod($request->phone_number),
+                    'phone_number' => $request->phone_number,
+                    'meta' => [
+                        'plan_id' => $newPlan->id,
+                        'campay_response' => $response
+                    ]
+                ]);
+
+                return back()->with('campay_reference', $response['reference'])
+                             ->with('message', 'Veuillez confirmer le paiement sur votre téléphone.');
+            }
+        } catch (\Exception $e) {
+            Log::error("Database Error during payment initiation: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Erreur technique lors de l\'enregistrement : ' . $e->getMessage()]);
         }
 
         $errorMessage = 'Échec de l\'initialisation du paiement avec Campay.';
