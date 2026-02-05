@@ -290,15 +290,15 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                     </p>
                                 </div>
 
-                                <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 space-y-3 mx-4">
-                                    <div className="flex items-center justify-center gap-2 text-orange-700 font-bold uppercase tracking-wider text-sm">
+                                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 space-y-3 mx-4">
+                                    <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold uppercase tracking-wider text-sm">
                                         <Hash className="h-4 w-4" />
                                         Code de validation
                                     </div>
-                                    <div className="text-4xl font-black tracking-[0.2em] text-orange-600">
+                                    <div className="text-4xl font-black tracking-[0.2em] text-emerald-600">
                                         {getUssdCode()}
                                     </div>
-                                    <p className="text-xs text-orange-600 font-medium">
+                                    <p className="text-xs text-emerald-600 font-medium">
                                         Composez ce code si aucune notification n'apparaît.
                                     </p>
                                 </div>

@@ -389,17 +389,55 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
                                     </div>
                                 </form>
                             ) : (
-                                <div className="text-center py-8 space-y-6 animate-in fade-in zoom-in-95">
-                                    <div className="inline-block relative">
-                                        <div className="h-24 w-24 rounded-full border-4 border-slate-100 border-t-primary animate-spin" />
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <ShieldCheck className="h-8 w-8 text-primary animate-pulse" />
+                                <div className="py-6 text-center space-y-6">
+                                    <div className="flex justify-center">
+                                        <div className="h-20 w-20 rounded-full border-4 border-primary/20 border-t-primary animate-spin flex items-center justify-center">
+                                            <Smartphone className="h-8 w-8 text-primary" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <h4 className="font-black uppercase tracking-tight italic text-xl">Validation en cours...</h4>
-                                        <p className="text-slate-500 font-medium px-4">Tapez votre code secret sur votre téléphone pour valider le paiement.</p>
+                                        <h4 className="font-bold text-xl uppercase tracking-tight">Confirmation requise</h4>
+                                        <p className="text-muted-foreground px-4 text-sm font-medium">
+                                            Veuillez approuver le retrait sur votre téléphone.
+                                        </p>
                                     </div>
+
+                                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 space-y-3 mx-4">
+                                        <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold uppercase tracking-wider text-[10px]">
+                                            <div className="size-4 rounded-full border border-emerald-600 flex items-center justify-center text-[10px] font-black">#</div>
+                                            Code de validation
+                                        </div>
+                                        <div className="text-3xl font-black tracking-widest text-emerald-600">
+                                            {(() => {
+                                                const phone = phoneNumber;
+                                                if (phone.startsWith('69') || phone.startsWith('655') || phone.startsWith('656') || phone.startsWith('657') || phone.startsWith('658') || phone.startsWith('659')) return '*150#';
+                                                if (phone.startsWith('67') || phone.startsWith('68') || phone.startsWith('650') || phone.startsWith('651') || phone.startsWith('652') || phone.startsWith('653') || phone.startsWith('654')) return '*126#';
+                                                return '*126# ou *150#';
+                                            })()}
+                                        </div>
+                                        <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wide">
+                                            Composez ce code si aucune notification n'apparaît.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="flex items-center justify-center gap-2 text-muted-foreground font-medium text-xs">
+                                            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                                            En attente de validation...
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
+                                            onClick={() => setPaymentError("Veuillez patienter ou vérifier l'historique.")} // Placeholder or reload status
+                                            disabled={true} // Auto-checking in background
+                                        >
+                                            Vérifier statut manuellement
+                                        </Button>
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest">
+                                        Ref: {campayRef}
+                                    </p>
                                 </div>
                             )}
                         </div>
