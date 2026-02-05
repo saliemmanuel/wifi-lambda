@@ -91,7 +91,7 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                 <TrendingUp className="h-5 w-5 text-amber-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight">{(stats.totalRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">€</span></div>
+                        <div className="text-3xl font-black tracking-tight">{(stats.totalRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span></div>
                         <p className="text-xs font-bold text-muted-foreground">Depuis le lancement</p>
                     </div>
 
@@ -130,12 +130,12 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fill: '#64748b', fontSize: 12 }}
-                                        tickFormatter={(value) => `${value}€`}
+                                        tickFormatter={(value) => `${value}`}
                                     />
                                     <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="3 3" />
                                     <Tooltip
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                        formatter={(value: any) => [`${value.toLocaleString()} €`, 'Revenu']}
+                                        formatter={(value: any) => [`${value.toLocaleString()} FCFA`, 'Revenu']}
                                         labelStyle={{ color: '#64748b' }}
                                     />
                                     <Area
@@ -242,7 +242,7 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                                         <span className="text-[9px] text-muted-foreground uppercase">{tx.method || 'Carte'}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-xs font-bold">{tx.amount} €</TableCell>
+                                                <TableCell className="text-xs font-bold">{tx.amount_fcfa} FCFA</TableCell>
                                                 <TableCell className="text-right">
                                                     <Badge variant="outline" className={cn(
                                                         "text-[9px] h-5 px-2 uppercase tracking-widest border-0",

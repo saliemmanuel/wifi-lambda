@@ -17,7 +17,7 @@ class DashboardController extends Controller
         $stats = [
             'totalTenants' => Tenant::count(),
             'activeSubscriptions' => Subscription::where('status', 'active')->count(),
-            'totalRevenue' => Payment::where('status', 'completed')->sum('amount_eur'),
+            'totalRevenue' => Payment::where('status', 'completed')->sum('amount_fcfa'),
             'newTenantsThisMonth' => Tenant::whereMonth('created_at', now()->month)->count(),
         ];
 
@@ -36,7 +36,7 @@ class DashboardController extends Controller
             
             $revenueData[] = (int) Payment::where('status', 'completed')
                 ->whereDate('created_at', $date)
-                ->sum('amount_eur');
+                ->sum('amount_fcfa');
         }
 
         return Inertia::render('admin/dashboard', [
