@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Head, usePage, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, SharedData } from '@/types';
-import { LayoutGrid, Ticket, Wifi, ShieldCheck, Clock, TrendingUp, Users, ArrowUpRight, CheckCircle2, Hash, Copy } from 'lucide-react';
+import { LayoutGrid, Ticket, Wifi, ShieldCheck, Clock, TrendingUp, Users, ArrowUpRight, CheckCircle2, Hash, Copy, Wallet, Banknote, CreditCard, Coins, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -25,6 +25,12 @@ interface Props {
         sold_this_month: number;
         revenue_this_month: number;
         active_sessions: number;
+        balance: number;
+        revenue_total: number;
+        tickets_sold_total: number;
+        withdrawals_total: number;
+        revenue_today: number;
+        tickets_sold_today: number;
     };
     charts: {
         sales: {
@@ -40,7 +46,7 @@ interface Props {
 }
 
 export default function TenantDashboard({ stats, charts, recent_vouchers }: Props) {
-    const { tenant } = usePage<SharedData>().props;
+    const { tenant, auth } = usePage<SharedData>().props;
     const [shopUrl, setShopUrl] = useState('');
 
     useEffect(() => {
@@ -73,6 +79,63 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
         value: revenueDataPoints[index] || 0
     }));
 
+    const cards = [
+        {
+            title: "MON SOLDE DISPONIBLE",
+            value: `${stats.balance.toLocaleString()} XAF`,
+            subtext: "Solde actuel",
+            icon: Wallet,
+            color: "text-blue-500",
+            bg: "bg-blue-50",
+            border: "border-blue-100"
+        },
+        {
+            title: "CHIFFRE D'AFFAIRES TOTAL",
+            value: `${stats.revenue_total.toLocaleString()} XAF`,
+            subtext: "Total généré",
+            icon: Banknote,
+            color: "text-emerald-500",
+            bg: "bg-emerald-50",
+            border: "border-emerald-100"
+        },
+        {
+            title: "TOTAL DES TICKETS VENDUS",
+            value: stats.tickets_sold_total,
+            subtext: "Tickets vendus",
+            icon: Ticket,
+            color: "text-amber-500",
+            bg: "bg-amber-50",
+            border: "border-amber-100"
+        },
+        {
+            title: "MONTANT TOTAL DES RETRAITS",
+            value: `${stats.withdrawals_total.toLocaleString()} XAF`,
+            subtext: "Total retiré",
+            icon: CreditCard,
+            color: "text-rose-500",
+            bg: "bg-rose-50",
+            border: "border-rose-100"
+        },
+        {
+            title: "RECETTE DU JOUR",
+            value: `${stats.revenue_today.toLocaleString()} XAF`,
+            subtext: new Date().toLocaleDateString('fr-FR'),
+            icon: Coins,
+            color: "text-purple-500",
+            bg: "bg-purple-50",
+            border: "border-purple-100"
+        },
+        {
+            title: "TICKETS VENDUS AUJOURD'HUI",
+            value: stats.tickets_sold_today,
+            subtext: new Date().toLocaleDateString('fr-FR'),
+            icon: Ticket,
+            color: "text-cyan-500",
+            bg: "bg-cyan-50",
+            border: "border-cyan-100"
+        }
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tableau de Bord" />
@@ -80,135 +143,80 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
             <div className="flex flex-col gap-8 p-6">
 
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Bonjour, {tenant?.name || 'Administrateur'}</h1>
-                        <p className="text-muted-foreground mt-1">Voici un aperçu de l'activité de votre réseau Wi-Fi.</p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-extrabold tracking-tight">Bonjour, {auth.user.name}</h1>
+                        <p className="text-muted-foreground">Gérez vos ventes et suivez vos performances en temps réel.</p>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-white p-2 pr-4 rounded-2xl shadow-sm border border-border">
-                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <ShieldCheck className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Plan Actuel</span>
-                            <div className="flex items-center gap-2">
-                                <span className="font-bold">{tenant?.plan?.name || 'Gratuit'}</span>
-                                {tenant?.plan && tenant.plan.commission_rate > 0 && (
-                                    <Badge variant="outline" className="h-5 text-[10px] bg-blue-50 text-blue-700 border-blue-100">
-                                        {tenant.plan.commission_rate}% Com.
-                                    </Badge>
-                                )}
+                    <Card className="bg-card shadow-sm border-border/50">
+                        <CardContent className="flex items-center gap-3 p-3 px-4">
+                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <ShieldCheck className="h-5 w-5" />
                             </div>
-                        </div>
-                    </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Abonnement</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-foreground">{tenant?.plan?.name || 'Gratuit'}</span>
+                                    {(tenant?.plan?.commission_rate ?? 0) > 0 && (
+                                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[9px] h-4 px-1 font-medium">
+                                            {tenant?.plan?.commission_rate}% Com.
+                                        </Badge>
+                                    )}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* Shop URL & Share Section */}
-                <Card className="border-primary/20 bg-primary/5 shadow-none overflow-hidden">
-                    <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
-                                <ArrowUpRight className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-sm">Votre boutique est en ligne !</h4>
-                                <p className="text-xs text-muted-foreground italic">Partagez ce lien à vos clients pour qu'ils achètent leurs tickets.</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 w-full md:w-auto">
-                            <div className="bg-white border text-sm font-mono px-3 py-2 rounded-lg flex-1 md:flex-none md:min-w-[300px] truncate">
-                                {shopUrl || 'Chargement...'}
-                            </div>
-                            <Button
-                                size="sm"
-                                className="gap-2 shrink-0"
-                                onClick={() => {
-                                    if (shopUrl) {
-                                        navigator.clipboard.writeText(shopUrl);
-                                        alert('Lien copié dans le presse-papier !');
-                                    }
-                                }}
-                            >
-                                <Copy className="h-4 w-4" /> Copier
-                            </Button>
-                            <Link href={`/${tenant?.slug || ''}/buy`} target="_blank">
-                                <Button size="sm" variant="outline" className="gap-2 shrink-0">
-                                    <ArrowUpRight className="h-4 w-4" /> Voir
-                                </Button>
-                            </Link>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Main Content Grid - Metric Cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {cards.map((card, idx) => (
+                        <Card key={idx} className="shadow-sm transition-all hover:shadow-md bg-card border-border/50 overflow-hidden relative group">
+                            {/* Corner Gradient Glow */}
+                            <div className={cn(
+                                "absolute -top-10 -right-10 w-32 h-32 blur-3xl opacity-[0.12] group-hover:opacity-[0.20] transition-opacity pointer-events-none",
+                                card.bg.replace('50', '500') // Transform bg-blue-50 to bg-blue-500 for the glow
+                            )} />
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="border-none shadow-sm bg-indigo-600 text-white overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Wifi className="h-16 w-16" />
-                        </div>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-medium uppercase tracking-widest text-indigo-100">Sessions Actives</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-black">{stats?.active_sessions || 0}</div>
-                            <div className="flex items-center gap-1 mt-2 text-indigo-200 text-xs">
-                                <TrendingUp className="h-3 w-3" />
-                                <span>Utilisateurs en ligne</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-none shadow-sm bg-white overflow-hidden relative">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Revenu du Mois</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-black text-slate-900">{(stats?.revenue_this_month || 0).toLocaleString()} <span className="text-sm font-medium">FCFA</span></div>
-                            <div className="flex items-center gap-1 mt-2 text-green-600 text-xs font-bold">
-                                <ArrowUpRight className="h-3 w-3" />
-                                <span>+0% vs mois dernier</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-none shadow-sm bg-white overflow-hidden relative">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Tickets Vendus</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-black text-slate-900">{stats?.sold_this_month || 0}</div>
-                            <div className="flex items-center gap-1 mt-2 text-muted-foreground text-xs font-medium">
-                                <CheckCircle2 className="h-3 w-3 text-primary" />
-                                <span>Ce mois en cours</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-none shadow-sm bg-white overflow-hidden relative">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Stock Disponible</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-black text-slate-900">{stats?.vouchers_available || 0}</div>
-                            <div className="flex items-center gap-1 mt-2 text-orange-600 text-xs font-bold">
-                                <Link href={`/${tenant?.slug || ''}/wifi/vouchers`} className="hover:underline flex items-center gap-1">
-                                    <span>Gérer le stock</span>
-                                    <ArrowUpRight className="h-3 w-3" />
-                                </Link>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+                                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    {card.title}
+                                </CardTitle>
+                                <div className={cn("h-8 w-8 rounded-full flex items-center justify-center relative z-10", card.bg, "dark:bg-opacity-10")}>
+                                    <card.icon className={cn("h-4 w-4", card.color)} />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className={cn("text-2xl font-black tabular-nums", card.color)}>{card.value}</div>
+                                <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1 font-bold">
+                                    <TrendingUp className="h-3 w-3 opacity-20" />
+                                    {card.subtext}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
 
                 {/* Revenue Growth Chart */}
-                <Card className="border-none shadow-sm bg-white">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-bold">Croissance Revenue</CardTitle>
-                        <p className="text-xs text-muted-foreground">Évolution du chiffre d'affaires sur les 7 derniers jours.</p>
+                <Card className="shadow-sm border-border/50 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
+                        <TrendingUp size={100} />
+                    </div>
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg font-bold">Croissance Revenue</CardTitle>
+                                <CardDescription>Évolution du chiffre d'affaires (7 derniers jours)</CardDescription>
+                            </div>
+                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-none">
+                                <TrendingUp className="size-3 mr-1" /> Direct
+                            </Badge>
+                        </div>
                     </CardHeader>
-                    <CardContent className="h-[300px] w-full pt-0">
+                    <CardContent className="h-[320px] pt-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={revenueChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <AreaChart data={revenueChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -219,20 +227,24 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
                                     dataKey="name"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#64748b', fontSize: 12 }}
+                                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 500 }}
                                     dy={10}
                                 />
                                 <YAxis
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#64748b', fontSize: 12 }}
-                                    tickFormatter={(value) => `${value}`}
+                                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 500 }}
                                 />
-                                <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="3 3" />
+                                <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" strokeOpacity={0.5} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value: any) => [`${value.toLocaleString()} FCFA`, 'Revenu']}
-                                    labelStyle={{ color: '#64748b' }}
+                                    cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                    contentStyle={{
+                                        borderRadius: '12px',
+                                        border: '1px solid hsl(var(--border))',
+                                        backgroundColor: 'hsl(var(--card))',
+                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                                    }}
+                                    formatter={(value: any) => [`${value.toLocaleString()} XAF`, 'Revenu']}
                                 />
                                 <Area
                                     type="monotone"
@@ -241,6 +253,9 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
                                     strokeWidth={3}
                                     fillOpacity={1}
                                     fill="url(#colorRevenue)"
+                                    animationDuration={1500}
+                                    dot={{ r: 4, fill: 'hsl(var(--background))', stroke: '#10b981', strokeWidth: 2 }}
+                                    activeDot={{ r: 6, fill: '#10b981', stroke: 'hsl(var(--background))', strokeWidth: 2 }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -249,35 +264,43 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
 
                 {/* Main Content Grid */}
                 <div className="grid gap-6 lg:grid-cols-7">
-                    {/* Sales Chart Placeholder / Simple Bar Chart */}
-                    <Card className="lg:col-span-4 border-none shadow-sm bg-white">
-                        <CardHeader className="flex flex-row items-center justify-between pb-8">
-                            <div>
-                                <CardTitle className="text-lg font-bold">Ventes des 7 derniers jours</CardTitle>
-                                <p className="text-xs text-muted-foreground">Volume de tickets distribués par jour.</p>
-                            </div>
+                    {/* Sales Chart */}
+                    <Card className="lg:col-span-4 shadow-sm border-border/50">
+                        <CardHeader>
+                            <CardTitle className="text-base font-bold">Ventes Quotidiennes</CardTitle>
+                            <CardDescription>Volume de tickets distribués par jour.</CardDescription>
                         </CardHeader>
-                        <CardContent className="h-[250px] w-full pt-0">
+                        <CardContent className="h-[280px] pt-4">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={salesChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                <BarChart data={salesChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <XAxis
                                         dataKey="name"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: '#64748b', fontSize: 10 }}
+                                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 500 }}
                                         dy={10}
                                     />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 500 }}
+                                    />
                                     <Tooltip
-                                        cursor={{ fill: '#f1f5f9' }}
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                        cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+                                        contentStyle={{
+                                            borderRadius: '12px',
+                                            border: '1px solid hsl(var(--border))',
+                                            backgroundColor: 'hsl(var(--card))',
+                                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                                        }}
                                         formatter={(value: any) => [`${value} tickets`, 'Ventes']}
-                                        labelStyle={{ color: '#64748b' }}
                                     />
                                     <Bar
                                         dataKey="value"
-                                        fill="#0f172a"
-                                        radius={[4, 4, 0, 0]}
-                                        barSize={30}
+                                        fill="hsl(var(--primary))"
+                                        radius={[6, 6, 0, 0]}
+                                        barSize={32}
+                                        animationDuration={1500}
                                     />
                                 </BarChart>
                             </ResponsiveContainer>
@@ -285,12 +308,10 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
                     </Card>
 
                     {/* Recent Vouchers */}
-                    <Card className="lg:col-span-3 border-none shadow-sm bg-white">
-                        <CardHeader>
-                            <div className="flex flex-row items-center justify-between">
-                                <CardTitle className="text-lg font-bold">Tickets Récents</CardTitle>
-                                <Link href={`/${tenant?.slug || ''}/wifi/vouchers`} className="text-xs text-primary font-bold hover:underline capitalize">Voir tout</Link>
-                            </div>
+                    <Card className="lg:col-span-3 shadow-sm">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="text-base font-bold">Tickets Récents</CardTitle>
+                            <Link href={`/${tenant?.slug || ''}/wifi/vouchers`} className="text-xs text-primary font-bold hover:underline capitalize">Voir tout</Link>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-6">
@@ -304,12 +325,12 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
                                         <div key={voucher.id} className="flex items-center gap-4">
                                             <div className={cn(
                                                 "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-                                                voucher.status === 'available' ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"
+                                                voucher.status === 'available' ? "bg-green-100 dark:bg-green-500/10 text-green-600" : "bg-blue-100 dark:bg-blue-500/10 text-blue-600"
                                             )}>
                                                 <Ticket className="h-5 w-5" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-slate-900 truncate uppercase">{voucher.username}</p>
+                                                <p className="text-sm font-bold text-foreground truncate uppercase">{voucher.username}</p>
                                                 <p className="text-xs text-muted-foreground truncate">{voucher.package?.name || voucher.profile_name}</p>
                                             </div>
                                             <div className="text-right">
@@ -326,6 +347,6 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
                     </Card>
                 </div>
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 }

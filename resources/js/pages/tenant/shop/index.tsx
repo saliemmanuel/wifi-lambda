@@ -44,9 +44,14 @@ interface WifiPackage {
 interface Props {
     packages: WifiPackage[];
     tenant_slug: string;
+    current_zone?: {
+        name: string;
+        description: string | null;
+        slug: string | null;
+    } | null;
 }
 
-export default function ShopIndex({ packages, tenant_slug }: Props) {
+export default function ShopIndex({ packages, tenant_slug, current_zone }: Props) {
     const { tenant } = usePage<any>().props;
     const [selectedPackage, setSelectedPackage] = useState<WifiPackage | null>(null);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -85,7 +90,8 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
                 },
                 body: JSON.stringify({
                     package_id: selectedPackage?.id,
-                    phone_number: phoneNumber
+                    phone_number: phoneNumber,
+                    zone_slug: current_zone?.slug
                 })
             });
 
@@ -208,7 +214,7 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <Head title={`Boutique Wi-Fi - ${tenant?.name}`} />
+            <Head title={`Boutique Wi-Fi - ${current_zone?.name || tenant?.name}`} />
 
             {/* Public Header */}
             <div className="bg-white border-b border-slate-200">
@@ -217,7 +223,7 @@ export default function ShopIndex({ packages, tenant_slug }: Props) {
                         <div className="bg-primary p-1.5 rounded-lg">
                             <Wifi className="h-5 w-5 text-white" />
                         </div>
-                        <span className="font-black text-lg tracking-tight uppercase italic">{tenant?.name}</span>
+                        <span className="font-black text-lg tracking-tight uppercase italic">{current_zone?.name || tenant?.name}</span>
                     </div>
 
                     <Dialog open={isRetrieveModalOpen} onOpenChange={setIsRetrieveModalOpen}>

@@ -119,26 +119,28 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Retraits Plateforme" />
 
-            <div className="max-w-5xl mx-auto space-y-8 p-4">
+            <div className="max-w-5xl mx-auto space-y-8 p-6">
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Retraits Plateforme</h1>
-                        <p className="text-slate-500 font-medium">Gérez les fonds accumulés par la plateforme.</p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Retraits Plateforme</h1>
+                        <p className="text-muted-foreground">Gérez les fonds accumulés par la plateforme.</p>
                     </div>
 
-                    <Card className="bg-primary text-primary-foreground border-none shadow-lg shadow-primary/20 overflow-hidden relative min-w-[300px]">
-                        <div className="absolute right-[-20px] top-[-20px] opacity-10">
-                            <Wallet size={120} />
-                        </div>
-                        <CardContent className="pt-6 pb-6 px-8 relative z-10">
-                            <div className="space-y-1">
-                                <p className="text-xs font-bold uppercase tracking-widest opacity-80 text-primary-foreground/80">Solde Disponible</p>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl font-black tracking-tighter">
-                                        {new Intl.NumberFormat().format(stats.availableBalanceFcfa)}
-                                    </span>
-                                    <span className="text-lg font-bold opacity-80">FCFA</span>
+                    <Card className="bg-card border-border/50 shadow-sm min-w-[280px]">
+                        <CardContent className="p-6">
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <Wallet className="h-6 w-6" />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Solde Disponible</p>
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-2xl font-bold tracking-tight text-foreground">
+                                            {new Intl.NumberFormat().format(stats.availableBalanceFcfa)}
+                                        </span>
+                                        <span className="text-sm font-semibold text-muted-foreground">FCFA</span>
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>
@@ -147,16 +149,22 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
 
                 {/* Info Alert */}
                 {showAlert && (
-                    <Alert className="bg-blue-600 border-none text-white rounded-2xl p-6 relative">
-                        <Info className="h-5 w-5 text-white" />
-                        <X
-                            className="h-4 w-4 absolute right-4 top-4 cursor-pointer opacity-70 hover:opacity-100"
+                    <Alert className="bg-muted/50 border-border/50 relative py-4">
+                        <Info className="h-4 w-4" />
+                        <div className="flex-1 pr-8">
+                            <AlertTitle className="text-sm font-semibold">Numéro de retrait</AlertTitle>
+                            <AlertDescription className="text-sm text-muted-foreground mt-1">
+                                Ces numéros sont utilisés pour les retraits de la plateforme. Ajoutez ou gérez vos coordonnées bancaires/mobiles ici.
+                            </AlertDescription>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 absolute right-2 top-2 text-muted-foreground hover:text-foreground"
                             onClick={() => setShowAlert(false)}
-                        />
-                        <AlertTitle className="text-lg font-bold mb-2">Numéro de retrait</AlertTitle>
-                        <AlertDescription className="text-blue-50 font-medium leading-relaxed opacity-90">
-                            Les numéros de téléphone affichés ici sont ceux utilisés pour les retraits de la plateforme. Vous pouvez ajouter ou supprimer des numéros selon vos besoins.
-                        </AlertDescription>
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </Alert>
                 )}
 
@@ -165,95 +173,93 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                     <div className="lg:col-span-2 space-y-8">
                         {/* Withdrawal Methods Section */}
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between px-2">
-                                <h2 className="text-lg font-bold flex items-center gap-2">
-                                    <Phone className="h-5 w-5 text-primary" />
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                     Numéros de retrait
                                 </h2>
                                 <Button
-                                    variant="default"
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => setIsAddingMethod(!isAddingMethod)}
-                                    className="rounded-xl font-bold gap-2"
+                                    className="gap-2"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    Ajouter un numéro
+                                    Ajouter
                                 </Button>
                             </div>
 
                             {isAddingMethod && (
-                                <Card className="border-2 border-dashed border-slate-200 shadow-none bg-slate-50/50 rounded-2xl">
+                                <Card className="border-primary/20 bg-primary/[0.02]">
                                     <form onSubmit={handleAddMethod}>
                                         <CardContent className="pt-6 space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <Label className="font-bold">Numéro Mobile Money (237...)</Label>
+                                                    <Label className="text-sm font-medium">Numéro Mobile Money</Label>
                                                     <Input
-                                                        placeholder="Ex: 695645546"
+                                                        placeholder="Ex: 237695645546"
                                                         value={methodData.phone_number}
                                                         onChange={e => setMethodData('phone_number', e.target.value)}
-                                                        className="h-12 rounded-xl"
                                                         required
                                                     />
-                                                    {methodErrors.phone_number && <p className="text-xs text-red-500 font-bold">{methodErrors.phone_number}</p>}
+                                                    {methodErrors.phone_number && <p className="text-xs text-destructive">{methodErrors.phone_number}</p>}
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label className="font-bold">Libellé (Optionnel)</Label>
+                                                    <Label className="text-sm font-medium">Libellé (Optionnel)</Label>
                                                     <Input
-                                                        placeholder="Ex: Compte Principal"
+                                                        placeholder="Ex: Compte Orange Principal"
                                                         value={methodData.label}
                                                         onChange={e => setMethodData('label', e.target.value)}
-                                                        className="h-12 rounded-xl"
                                                     />
                                                 </div>
                                             </div>
                                         </CardContent>
-                                        <CardFooter className="flex justify-end gap-2">
-                                            <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => setIsAddingMethod(false)}>Annuler</Button>
-                                            <Button type="submit" disabled={processingMethod} className="rounded-xl font-black">Enregistrer</Button>
+                                        <CardFooter className="flex justify-end gap-2 pt-0 pb-6 pr-6">
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => setIsAddingMethod(false)}>Annuler</Button>
+                                            <Button type="submit" size="sm" disabled={processingMethod}>Enregistrer</Button>
                                         </CardFooter>
                                     </form>
                                 </Card>
                             )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {methods.map((method, idx) => (
-                                    <Card key={method.id} className="rounded-2xl border shadow-sm relative overflow-hidden group">
-                                        <div className="absolute top-4 right-4">
+                                {methods.map((method) => (
+                                    <Card key={method.id} className="shadow-sm border-border/60 hover:border-border transition-colors group">
+                                        <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                                                    {method.label || 'Mobile Money'}
+                                                </p>
+                                                <h3 className="text-lg font-semibold tabular-nums">{method.phone_number}</h3>
+                                            </div>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                                 onClick={() => handleDeleteMethod(method.id)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
-                                        </div>
-                                        <CardHeader className="pb-3">
-                                            <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Numéro de téléphone {idx + 1}</p>
-                                            <CardTitle className="text-lg flex items-center gap-2">
-                                                <Phone className="h-4 w-4 text-primary" />
-                                                {method.phone_number}
-                                            </CardTitle>
                                         </CardHeader>
-                                        <CardContent>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-sm font-medium text-slate-500">{method.label || 'Mobile Money'}</p>
-                                                {method.is_default && (
-                                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tight">Par défaut</span>
-                                                )}
+                                        <CardContent className="p-4 pt-0">
+                                            <div className="flex items-center justify-between mt-2">
+                                                {method.is_default ? (
+                                                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] h-5 px-2">
+                                                        Par défaut
+                                                    </Badge>
+                                                ) : <div />}
                                             </div>
                                         </CardContent>
                                     </Card>
                                 ))}
                                 {methods.length === 0 && !isAddingMethod && (
-                                    <div className="col-span-full py-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                                        <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Aucun numéro enregistré</p>
+                                    <div className="col-span-full py-10 text-center border-2 border-dashed border-muted rounded-xl">
+                                        <p className="text-sm text-muted-foreground">Aucun numéro enregistré</p>
                                         <Button
-                                            variant="outline"
-                                            className="mt-4 rounded-xl font-bold"
+                                            variant="link"
+                                            className="mt-1"
                                             onClick={() => setIsAddingMethod(true)}
                                         >
-                                            Ajouter le premier numéro
+                                            Ajouter un numéro maintenant
                                         </Button>
                                     </div>
                                 )}
@@ -262,38 +268,35 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
 
                         {/* Withdrawal Initiation Section */}
                         {methods.length > 0 && (
-                            <Card className="rounded-3xl border shadow-xl bg-white overflow-hidden border-primary/10">
-                                <CardHeader className="bg-slate-50/50 border-b pb-6">
-                                    <CardTitle>Demande de Retrait</CardTitle>
-                                    <CardDescription>Indiquez le montant à retirer de la plateforme.</CardDescription>
+                            <Card className="shadow-sm border-border/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg font-bold">Demande de Retrait</CardTitle>
+                                    <CardDescription>Les fonds seront transférés sur le compte sélectionné.</CardDescription>
                                 </CardHeader>
                                 <form onSubmit={handleInitiateWithdrawal}>
-                                    <CardContent className="pt-8 space-y-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            <div className="space-y-3">
-                                                <Label className="text-base font-bold text-slate-800">Montant (FCFA)</Label>
+                                    <CardContent className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-medium">Montant à retirer (FCFA)</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type="number"
-                                                        placeholder="Min: 100"
-                                                        className="h-14 text-xl font-black rounded-2xl pl-12 border-slate-200 focus-visible:ring-primary/20"
+                                                        placeholder="CFA"
+                                                        className="text-lg font-semibold h-12 pr-12"
                                                         value={withdrawalData.amount_fcfa}
                                                         onChange={e => setWithdrawalData('amount_fcfa', e.target.value)}
                                                         required
                                                     />
-                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">CFA</span>
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-xs">CFA</span>
                                                 </div>
-                                                {withdrawalErrors.amount_fcfa && <p className="text-xs text-red-500 font-bold">{withdrawalErrors.amount_fcfa}</p>}
-                                                <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
-                                                    <span>Min: 100 CFA</span>
-                                                    <span>Max: {stats.availableBalanceFcfa.toLocaleString()} CFA</span>
-                                                </div>
+                                                {withdrawalErrors.amount_fcfa && <p className="text-xs text-destructive">{withdrawalErrors.amount_fcfa}</p>}
+                                                <p className="text-[10px] text-muted-foreground">Disponible: {stats.availableBalanceFcfa.toLocaleString()} CFA</p>
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <Label className="text-base font-bold text-slate-800">Vers le numéro</Label>
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-medium">Vers le numéro</Label>
                                                 <select
-                                                    className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-4 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    className="w-full h-12 bg-background border border-input rounded-md px-3 text-sm font-medium outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
                                                     value={withdrawalData.method_id}
                                                     onChange={e => setWithdrawalData('method_id', e.target.value)}
                                                 >
@@ -301,27 +304,25 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                                                         <option key={m.id} value={m.id}>{m.phone_number} ({m.label || 'Principal'})</option>
                                                     ))}
                                                 </select>
-                                                {withdrawalErrors.method_id && <p className="text-xs text-red-500 font-bold">{withdrawalErrors.method_id}</p>}
+                                                {withdrawalErrors.method_id && <p className="text-xs text-destructive">{withdrawalErrors.method_id}</p>}
                                             </div>
                                         </div>
 
-                                        <div className="p-4 bg-yellow-50 rounded-2xl border border-yellow-100 flex items-start gap-4">
-                                            <div className="p-2 bg-yellow-100 rounded-lg">
-                                                <Info className="h-4 w-4 text-yellow-700" />
-                                            </div>
-                                            <p className="text-xs text-yellow-800 font-medium leading-relaxed">
-                                                Le retrait sera traité instantanément ou dans les 24h ouvrées. Assurez-vous que le solde de la plateforme est suffisant pour couvrir cette opération.
+                                        <div className="p-4 bg-muted/30 rounded-lg border border-border/50 flex items-start gap-3">
+                                            <Info className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Le traitement peut prendre jusqu'à 24h ouvrées. Assurez-vous que les informations du compte destinataire sont correctes.
                                             </p>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="bg-slate-50/30 border-t p-8">
+                                    <CardFooter className="pt-2 pb-6 border-t mt-4 pt-6 flex justify-end px-6">
                                         <Button
                                             type="submit"
                                             disabled={processingWithdrawal || !withdrawalData.amount_fcfa || Number(withdrawalData.amount_fcfa) > stats.availableBalanceFcfa}
-                                            className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                            className="w-full md:w-auto h-11 px-8"
                                         >
-                                            {processingWithdrawal ? 'Initialisation...' : 'Initier le retrait maintenant'}
-                                            <ArrowUpRight className="ml-2 h-5 w-5" />
+                                            {processingWithdrawal ? 'Traitement...' : 'Initier le retrait'}
+                                            <ArrowUpRight className="ml-2 h-4 w-4" />
                                         </Button>
                                     </CardFooter>
                                 </form>
@@ -331,52 +332,52 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
 
                     {/* Right Column: History */}
                     <div className="space-y-4">
-                        <h2 className="text-lg font-bold flex items-center gap-2 px-2">
-                            <History className="h-5 w-5 text-primary" />
-                            Historique récent
-                        </h2>
+                        <div className="flex items-center gap-2 px-1">
+                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                Historique
+                            </h2>
+                        </div>
 
                         <div className="space-y-3">
                             {withdrawals.data.map((item) => (
-                                <Card key={item.id} className="rounded-2xl border shadow-sm group hover:border-primary/20 transition-all">
-                                    <div className="p-4 flex flex-col gap-3">
+                                <Card key={item.id} className="shadow-none border-border/40 hover:border-border/80 transition-all">
+                                    <div className="p-4 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <span className={cn(
-                                                "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5",
-                                                getStatusColor(item.status)
+                                            <Badge variant="outline" className={cn(
+                                                "text-[9px] font-bold uppercase tracking-tight py-0 h-5 px-1.5 flex items-center gap-1",
+                                                item.status === 'completed' ? "text-emerald-600 dark:text-emerald-400 border-emerald-500/20" :
+                                                    item.status === 'processing' ? "text-amber-600 dark:text-amber-400 border-amber-500/20" :
+                                                        "text-destructive border-destructive/20"
                                             )}>
                                                 {getStatusIcon(item.status)}
                                                 {item.status}
-                                            </span>
-                                            <span className="text-[11px] font-bold text-slate-400">
+                                            </Badge>
+                                            <span className="text-[10px] font-medium text-muted-foreground">
                                                 {new Date(item.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                                             </span>
                                         </div>
 
                                         <div className="flex justify-between items-end">
-                                            <div>
-                                                <p className="text-sm font-black text-slate-900">
+                                            <div className="space-y-0.5">
+                                                <p className="text-sm font-bold text-foreground">
                                                     {new Intl.NumberFormat().format(item.amount_fcfa)} FCFA
                                                 </p>
-                                                <p className="text-[10px] font-medium text-slate-500 mt-0.5">
-                                                    Ref: {item.reference}
+                                                <p className="text-[9px] font-medium text-muted-foreground">
+                                                    {item.reference}
                                                 </p>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Vers</p>
-                                                <p className="text-[11px] font-black text-slate-600 italic">
-                                                    *{item.method?.phone_number.slice(-4)}
-                                                </p>
-                                            </div>
+                                            <p className="text-[10px] font-semibold text-muted-foreground italic">
+                                                *{item.method?.phone_number.slice(-4)}
+                                            </p>
                                         </div>
                                     </div>
                                 </Card>
                             ))}
 
                             {withdrawals.data.length === 0 && (
-                                <div className="py-12 text-center opacity-50 space-y-2">
-                                    <History className="h-12 w-12 mx-auto text-slate-200" />
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Aucun retrait</p>
+                                <div className="py-20 text-center space-y-2 opacity-40">
+                                    <History className="h-8 w-8 mx-auto" />
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Aucun retrait</p>
                                 </div>
                             )}
                         </div>

@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Ticket, Wifi, Settings, Users, Building2, CreditCard, TrendingUp, MapPin, ArrowRightLeft, Wallet } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Ticket, Wifi, Settings, Users, Building2, CreditCard, TrendingUp, MapPin, ArrowRightLeft, Wallet, ChartBar } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -71,9 +71,19 @@ export function AppSidebar() {
                 icon: CreditCard,
             },
             {
+                title: 'Gestion des Zones',
+                href: `/${tenant.slug}/zones`,
+                icon: MapPin,
+            },
+            {
                 title: 'Stock de Tickets',
                 href: `/${tenant.slug}/wifi/vouchers`,
                 icon: Wifi,
+            },
+            {
+                title: 'Statistiques WiFi',
+                href: `/${tenant.slug}/wifi/statistics`,
+                icon: ChartBar,
             },
             {
                 title: 'Transactions',
@@ -129,9 +139,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    {isAdminPath ? 'Platform Admin' : (tenant ? tenant.name : 'Main Menu')}
-                </div>
+
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 

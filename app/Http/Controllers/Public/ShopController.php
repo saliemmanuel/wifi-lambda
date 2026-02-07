@@ -20,7 +20,7 @@ class ShopController extends Controller
         protected CampayService $campayService
     ) {}
 
-    public function index($tenant_slug)
+    public function index($tenant_slug, $zone = null)
     {
         // Safety check: Ensure tenant connection is set
         $tenant = $this->tenantService->getCurrentTenant();
@@ -29,14 +29,36 @@ class ShopController extends Controller
             $this->tenantService->switchTo($tenant);
         }
 
-        // Optimized query: Get packages with available voucher count
-        $packages = WifiPackage::withCount(['vouchers as available_count' => function($query) {
+        // Determine Active Zone FIRST
+        $activeZone = null;
+        if ($zone) {
+            if (is_numeric($zone)) {
+                $activeZone = \App\Models\Tenant\MikrotikRouter::find($zone);
+            } else {
+                $activeZone = \App\Models\Tenant\MikrotikRouter::where('slug', $zone)->first();
+            }
+        }
+
+        // Optimized query: Get packages with available voucher count filtered by Zone
+        $query = WifiPackage::withCount(['vouchers as available_count' => function($query) use ($activeZone) {
             $query->where('status', 'available');
-        }])->get();
+            if ($activeZone) {
+                // If in a zone, only count vouchers for this zone or global vouchers
+                $query->where(function($q) use ($activeZone) {
+                    $q->whereNull('hotspot_id')
+                      ->orWhere('hotspot_id', $activeZone->id);
+                });
+            }
+        }]);
+        
+        // Removed Package filtering by mikrotik_router_id as Packages are global.
+
+        $packages = $query->get();
 
         return Inertia::render('tenant/shop/index', [
             'packages' => $packages,
-            'tenant_slug' => $tenant_slug
+            'tenant_slug' => $tenant_slug,
+            'current_zone' => $activeZone
         ]);
     }
 
@@ -45,6 +67,7 @@ class ShopController extends Controller
         $request->validate([
             'package_id' => 'required|exists:tenant.wifi_packages,id',
             'phone_number' => 'required|string|min:9',
+            'zone_slug' => 'nullable|string',
         ]);
 
         // Fix: Retrieve tenant for reference generation
@@ -52,10 +75,23 @@ class ShopController extends Controller
 
         $package = WifiPackage::findOrFail($request->package_id);
         
+        $activeZone = null;
+        if ($request->zone_slug) {
+            $activeZone = \App\Models\Tenant\MikrotikRouter::where('slug', $request->zone_slug)->first();
+        }
+
         // Pick first available voucher for this package
-        $voucher = WifiVoucher::where('package_id', $package->id)
-            ->where('status', 'available')
-            ->first();
+        $voucherQuery = WifiVoucher::where('package_id', $package->id)
+            ->where('status', 'available');
+            
+        if ($activeZone) {
+             $voucherQuery->where(function($q) use ($activeZone) {
+                $q->whereNull('hotspot_id')
+                  ->orWhere('hotspot_id', $activeZone->id);
+             });
+        }
+        
+        $voucher = $voucherQuery->first();
 
         if (!$voucher) {
             return response()->json(['error' => 'Désolé, plus de tickets disponibles pour ce forfait.'], 400);

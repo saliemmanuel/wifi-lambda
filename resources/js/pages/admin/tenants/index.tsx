@@ -45,9 +45,28 @@ interface TenantsIndexProps {
 export default function TenantsIndex({ tenants, filters }: TenantsIndexProps) {
     const [search, setSearch] = useState(filters.search || '');
 
-    const handleSearch = (e: React.FormEvent) => {
+    const performSearch = (value: string) => {
+        router.get('/admin/tenants',
+            { search: value },
+            {
+                preserveState: true,
+                replace: true,
+                only: ['tenants']
+            }
+        );
+    };
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearch(value);
+        // We can use a timeout for a simple debounce if needed, 
+        // but for now let's ensure it at least updates correctly
+        performSearch(value);
+    };
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get('/admin/tenants', { search }, { preserveState: true });
+        performSearch(search);
     };
 
     const toggleStatus = (tenant: Tenant) => {
@@ -75,7 +94,7 @@ export default function TenantsIndex({ tenants, filters }: TenantsIndexProps) {
                     </div>
                 </div>
 
-                <form onSubmit={handleSearch} className="flex items-center gap-4">
+                <form onSubmit={handleSearchSubmit} className="flex items-center gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -83,7 +102,7 @@ export default function TenantsIndex({ tenants, filters }: TenantsIndexProps) {
                             placeholder="Rechercher par nom, email ou lien..."
                             className="pl-10 h-12 rounded-xl bg-white dark:bg-zinc-900 border-sidebar-border/70 font-bold"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={handleSearchChange}
                         />
                     </div>
                 </form>
@@ -110,7 +129,7 @@ export default function TenantsIndex({ tenants, filters }: TenantsIndexProps) {
                                 <div className="flex items-center justify-between text-[11px]">
                                     <span className="font-bold text-muted-foreground uppercase">Plan Actuel :</span>
                                     <span className="font-black uppercase tracking-tight text-primary">
-                                        {tenant.active_subscription?.plan.name || tenant.plan?.name || 'Standard'}
+                                        {tenant.plan?.name || tenant.active_subscription?.plan.name || 'Standard'}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between text-[11px]">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\WifiPackage;
 use App\Models\Tenant\WifiVoucher;
+use App\Models\Tenant\MikrotikRouter;
 use App\Services\TenantService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,7 @@ class WifiVoucherController extends Controller
 
     public function index(Request $request, $tenant_slug)
     {
-        $query = WifiVoucher::with('package');
+        $query = WifiVoucher::with(['package', 'router']);
 
         // Search Filter (Username, Comment, Profile)
         if ($request->has('search')) {
@@ -36,13 +37,19 @@ class WifiVoucherController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Zone Filter
+        if ($request->has('zone_id') && $request->zone_id !== 'all') {
+            $query->where('hotspot_id', $request->zone_id); // Assuming hotspot_id is the foreign key for zones
+        }
+
         $vouchers = $query->latest()->paginate(15)->withQueryString();
         $packages = WifiPackage::all();
 
         return Inertia::render('tenant/wifi/vouchers/index', [
             'vouchers' => $vouchers,
             'packages' => $packages,
-            'filters' => $request->only(['search', 'status']),
+            'zones' => MikrotikRouter::all(['id', 'name']),
+            'filters' => $request->only(['search', 'status', 'zone_id']),
             'stats_summary' => [
                 'total' => WifiVoucher::count(),
                 'available' => WifiVoucher::where('status', 'available')->count(),
@@ -57,10 +64,23 @@ class WifiVoucherController extends Controller
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx',
             'package_id' => 'required|exists:tenant.wifi_packages,id',
+            'zone_id' => 'nullable|string', // 'all' or ID
         ]);
 
         $file = $request->file('file');
         $packageId = $request->input('package_id');
+        $zoneInput = $request->input('zone_id');
+        
+        $hotspotId = ($zoneInput && $zoneInput !== 'all') ? $zoneInput : null;
+        
+        if ($hotspotId) {
+             // Validate if ID exists if not 'all'
+             $exists = MikrotikRouter::where('id', $hotspotId)->exists();
+             if (!$exists) {
+                 return back()->withErrors(['zone_id' => 'Zone invalide.']);
+             }
+        }
+
         $path = $file->getRealPath();
         
         $csvData = array_map(function($line) {
@@ -114,6 +134,7 @@ class WifiVoucherController extends Controller
 
             WifiVoucher::create([
                 'package_id' => $packageId,
+                'hotspot_id' => $hotspotId,
                 'username' => $username,
                 'password' => $password,
                 'profile_name' => $profile,

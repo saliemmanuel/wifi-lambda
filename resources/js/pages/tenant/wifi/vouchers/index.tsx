@@ -46,6 +46,9 @@ interface WifiVoucher {
     package?: {
         name: string;
     };
+    router?: {
+        name: string;
+    };
     created_at: string;
 }
 
@@ -53,6 +56,11 @@ interface WifiPackage {
     id: number;
     name: string;
     price_fcfa: number;
+}
+
+interface Zone {
+    id: number;
+    name: string;
 }
 
 interface Props {
@@ -66,9 +74,11 @@ interface Props {
         next_page_url: string | null;
     };
     packages: WifiPackage[];
+    zones: Zone[];
     filters: {
         search?: string;
         status?: string;
+        zone_id?: string;
     };
     stats_summary: {
         total: number;
@@ -78,7 +88,7 @@ interface Props {
     };
 }
 
-export default function VouchersIndex({ vouchers, packages, filters, stats_summary }: Props) {
+export default function VouchersIndex({ vouchers, packages, zones, filters, stats_summary }: Props) {
     const { tenant } = usePage<SharedData>().props;
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [searchValue, setSearchValue] = useState(filters.search || '');
@@ -97,6 +107,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
     const { data: importData, setData: setImportData, post, processing, errors, reset } = useForm({
         file: null as File | null,
         package_id: '',
+        zone_id: '',
     });
 
     const { delete: destroy } = useForm();
@@ -104,9 +115,9 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
     // Debounced search
     const debouncedSearch = useCallback(
         debounce((value: string) => {
-            router.get(`/${tenant?.slug}/wifi/vouchers`, { search: value, status: filters.status }, { preserveState: true, replace: true });
+            router.get(`/${tenant?.slug}/wifi/vouchers`, { search: value, status: filters.status, zone_id: filters.zone_id }, { preserveState: true, replace: true });
         }, 300),
-        [filters.status, tenant?.slug]
+        [filters.status, filters.zone_id, tenant?.slug]
     );
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +126,11 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
     };
 
     const handleStatusFilter = (status: string) => {
-        router.get(`/${tenant?.slug}/wifi/vouchers`, { search: searchValue, status }, { preserveState: true });
+        router.get(`/${tenant?.slug}/wifi/vouchers`, { search: searchValue, status, zone_id: filters.zone_id }, { preserveState: true });
+    };
+
+    const handleZoneFilter = (zone_id: string) => {
+        router.get(`/${tenant?.slug}/wifi/vouchers`, { search: searchValue, status: filters.status, zone_id }, { preserveState: true });
     };
 
     const handleImport = (e: React.FormEvent) => {
@@ -124,7 +139,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
             forceFormData: true,
             onSuccess: () => {
                 setIsImportModalOpen(false);
-                reset('file', 'package_id');
+                reset('file', 'package_id', 'zone_id');
             }
         });
     };
@@ -217,6 +232,24 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                                     </DialogHeader>
                                     <div className="grid gap-4 py-6">
                                         <div className="grid gap-2">
+                                            <Label htmlFor="zone">Zone (Optionnel)</Label>
+                                            <Select
+                                                value={importData.zone_id.toString()}
+                                                onValueChange={(value) => setImportData('zone_id', value)}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Sélectionnez une zone / routeur" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {zones.map((zone) => (
+                                                        <SelectItem key={zone.id} value={zone.id.toString()}>
+                                                            {zone.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-2">
                                             <Label htmlFor="package">Forfait associé</Label>
                                             <Select
                                                 value={importData.package_id.toString()}
@@ -273,7 +306,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card className="bg-white shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all" onClick={() => handleStatusFilter('all')}>
+                    <Card className="bg-card shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all" onClick={() => handleStatusFilter('all')}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Stock Total</CardTitle>
                         </CardHeader>
@@ -281,7 +314,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                             <div className="text-2xl font-black">{stats_summary.total}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-white shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-green-500/20 transition-all" onClick={() => handleStatusFilter('available')}>
+                    <Card className="bg-card shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-green-500/20 transition-all" onClick={() => handleStatusFilter('available')}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Disponibles</CardTitle>
                         </CardHeader>
@@ -289,7 +322,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                             <div className="text-2xl font-black text-green-600">{stats_summary.available}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-white shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-orange-500/20 transition-all" onClick={() => handleStatusFilter('expired')}>
+                    <Card className="bg-card shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-orange-500/20 transition-all" onClick={() => handleStatusFilter('expired')}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Expirés</CardTitle>
                         </CardHeader>
@@ -297,7 +330,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                             <div className="text-2xl font-black text-orange-600">{stats_summary.expired}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-white shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-blue-500/20 transition-all" onClick={() => handleStatusFilter('sold')}>
+                    <Card className="bg-card shadow-sm border-none cursor-pointer hover:ring-2 hover:ring-blue-500/20 transition-all" onClick={() => handleStatusFilter('sold')}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Vendus</CardTitle>
                         </CardHeader>
@@ -307,8 +340,8 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                     </Card>
                 </div>
 
-                <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
-                    <div className="p-4 bg-white border-b flex flex-col md:flex-row items-center gap-4">
+                <div className="border border-border rounded-xl bg-card overflow-hidden shadow-sm">
+                    <div className="p-4 bg-card border-b flex flex-col md:flex-row items-center gap-4">
                         <div className="relative flex-1 w-full">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -341,9 +374,27 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                                 Vendus
                             </Badge>
                         </div>
+                        <div className="w-[200px]">
+                            <Select
+                                value={filters.zone_id || 'all'}
+                                onValueChange={(value) => handleZoneFilter(value)}
+                            >
+                                <SelectTrigger className="h-10">
+                                    <SelectValue placeholder="Filtrer par Zone" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Toutes les zones</SelectItem>
+                                    {zones.map((zone) => (
+                                        <SelectItem key={zone.id} value={zone.id.toString()}>
+                                            {zone.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <Table>
-                        <TableHeader className="bg-muted/30">
+                        <TableHeader className="bg-muted/50">
                             <TableRow>
                                 <TableHead className="w-[40px]">
                                     <Checkbox
@@ -353,6 +404,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                                 </TableHead>
                                 <TableHead className="font-bold">Username</TableHead>
                                 <TableHead className="font-bold">Password</TableHead>
+                                <TableHead className="font-bold">Zone</TableHead>
                                 <TableHead className="font-bold">Profil Client</TableHead>
                                 <TableHead className="font-bold">Commentaire</TableHead>
                                 <TableHead className="font-bold">Statut</TableHead>
@@ -362,7 +414,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                         <TableBody>
                             {vouchers.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-48 text-center text-muted-foreground">
+                                    <TableCell colSpan={8} className="h-48 text-center text-muted-foreground">
                                         <div className="flex flex-col items-center">
                                             <Ticket className="h-12 w-12 opacity-10 mb-4" />
                                             <p className="font-medium">Aucun ticket trouvé.</p>
@@ -380,6 +432,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                                         </TableCell>
                                         <TableCell className="font-mono font-bold text-primary">{voucher.username}</TableCell>
                                         <TableCell className="font-mono">{voucher.password}</TableCell>
+                                        <TableCell className="text-xs">{voucher.router?.name || '-'}</TableCell>
                                         <TableCell className="text-xs font-medium italic">{voucher.package?.name || voucher.profile_name}</TableCell>
                                         <TableCell className="max-w-[200px] truncate text-[11px] text-muted-foreground font-medium">
                                             {voucher.comment}
@@ -412,7 +465,7 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
 
                     {/* Pagination */}
                     {vouchers.last_page > 1 && (
-                        <div className="p-4 border-t bg-white flex items-center justify-between">
+                        <div className="p-4 border-t bg-card flex items-center justify-between">
                             <p className="text-xs text-muted-foreground font-medium">
                                 Affichage de {vouchers.data.length} sur {vouchers.total} tickets
                             </p>
@@ -448,7 +501,6 @@ export default function VouchersIndex({ vouchers, packages, filters, stats_summa
                 </div>
             </div>
 
-            {/* Premium Confirmation Dialogs */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

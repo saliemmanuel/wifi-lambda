@@ -62,54 +62,54 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
             <Head title="Platform Administration" />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-6">
                 <div className="grid auto-rows-min gap-6 md:grid-cols-4">
-                    <div className="flex flex-col gap-2 rounded-2xl border border-sidebar-border/70 p-6 dark:border-sidebar-border shadow-sm bg-white dark:bg-zinc-900 transition-all hover:shadow-md">
+                    <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Zones Totales</span>
                             <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
                                 <Building2 className="h-5 w-5 text-blue-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight">{stats.totalTenants}</div>
+                        <div className="text-3xl font-black tracking-tight text-foreground">{stats.totalTenants}</div>
                         <p className="text-xs font-bold text-muted-foreground">+{stats.newTenantsThisMonth} ce mois-ci</p>
                     </div>
 
-                    <div className="flex flex-col gap-2 rounded-2xl border border-sidebar-border/70 p-6 dark:border-sidebar-border shadow-sm bg-white dark:bg-zinc-900 transition-all hover:shadow-md">
+                    <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Abonnements Actifs</span>
                             <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
                                 <CreditCard className="h-5 w-5 text-emerald-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight">{stats.activeSubscriptions}</div>
+                        <div className="text-3xl font-black tracking-tight text-foreground">{stats.activeSubscriptions}</div>
                         <p className="text-xs font-bold text-muted-foreground">Zones opérationnelles</p>
                     </div>
 
-                    <div className="flex flex-col gap-2 rounded-2xl border border-sidebar-border/70 p-6 dark:border-sidebar-border shadow-sm bg-white dark:bg-zinc-900 transition-all hover:shadow-md">
+                    <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Revenu Global</span>
                             <div className="p-2 bg-amber-50 dark:bg-amber-500/10 rounded-xl">
                                 <TrendingUp className="h-5 w-5 text-amber-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight">{(stats.totalRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span></div>
+                        <div className="text-3xl font-black tracking-tight text-foreground">{(stats.totalRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span></div>
                         <p className="text-xs font-bold text-muted-foreground">Depuis le lancement</p>
                     </div>
 
-                    <div className="flex flex-col gap-2 rounded-2xl border border-sidebar-border/70 p-6 dark:border-sidebar-border shadow-sm bg-white dark:bg-zinc-900 transition-all hover:shadow-md">
+                    <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Santé Système</span>
                             <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
                                 <Users className="h-5 w-5 text-indigo-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight">99.9%</div>
+                        <div className="text-3xl font-black tracking-tight text-foreground">99.9%</div>
                         <p className="text-xs font-bold text-muted-foreground text-emerald-500">Service opérationnel</p>
                     </div>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-                    <div className="col-span-4 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-zinc-900 shadow-sm p-6">
-                        <h3 className="text-lg font-black uppercase tracking-tight italic mb-6">Croissance Revenue</h3>
+                    <div className="col-span-4 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm p-6">
+                        <h3 className="text-lg font-black uppercase tracking-tight italic mb-6 text-foreground">Croissance Revenue</h3>
                         <div className="h-[280px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -132,11 +132,11 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                         tick={{ fill: '#64748b', fontSize: 12 }}
                                         tickFormatter={(value) => `${value}`}
                                     />
-                                    <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="3 3" />
+                                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                                     <Tooltip
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                        contentStyle={{ borderRadius: 'var(--radius)', border: 'none', backgroundColor: 'hsl(var(--card))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                         formatter={(value: any) => [`${value.toLocaleString()} FCFA`, 'Revenu']}
-                                        labelStyle={{ color: '#64748b' }}
+                                        labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                                     />
                                     <Area
                                         type="monotone"
@@ -150,18 +150,18 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                             </ResponsiveContainer>
                         </div>
                     </div>
-                    <div className="col-span-3 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-zinc-900 shadow-sm p-6">
-                        <h3 className="text-lg font-black uppercase tracking-tight italic mb-6">Dernières Zones créées</h3>
+                    <div className="col-span-3 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm p-6">
+                        <h3 className="text-lg font-black uppercase tracking-tight italic mb-6 text-foreground">Dernières Zones créées</h3>
                         <div className="space-y-4">
                             {recentTenants.map((tenant) => (
                                 <div key={tenant.id} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/5 p-2 rounded-xl transition-all">
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-black uppercase italic tracking-tight">{tenant.name}</span>
+                                        <span className="text-sm font-black uppercase italic tracking-tight text-foreground">{tenant.name}</span>
                                         <span className="text-[10px] font-bold text-muted-foreground uppercase">{tenant.plan?.name || 'Gratuit'} — /{tenant.slug}</span>
                                     </div>
                                     <span className={cn(
                                         "text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg",
-                                        tenant.status === 'active' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                                        tenant.status === 'active' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" : "bg-amber-50 dark:bg-amber-500/10 text-amber-600"
                                     )}>
                                         {tenant.status === 'active' ? 'Actif' : 'Suspendu'}
                                     </span>
@@ -179,8 +179,8 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                 {/* Bottom Section: Plan Distribution & Recent Transactions */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
                     {/* Plan Distribution Pie Chart */}
-                    <div className="col-span-3 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-zinc-900 shadow-sm p-6">
-                        <h3 className="text-lg font-black uppercase tracking-tight italic mb-6">Répartition par Plan</h3>
+                    <div className="col-span-3 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm p-6">
+                        <h3 className="text-lg font-black uppercase tracking-tight italic mb-6 text-foreground">Répartition par Plan</h3>
                         <div className="h-[280px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -209,9 +209,9 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                     </div>
 
                     {/* Recent Transactions Table */}
-                    <div className="col-span-4 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-zinc-900 shadow-sm p-6">
+                    <div className="col-span-4 relative min-h-[400px] flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-black uppercase tracking-tight italic">Dernières Transactions</h3>
+                            <h3 className="text-lg font-black uppercase tracking-tight italic text-foreground">Dernières Transactions</h3>
                             <span className="text-xs font-bold text-muted-foreground uppercase">Revenus Plateforme</span>
                         </div>
 
@@ -246,8 +246,8 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                                 <TableCell className="text-right">
                                                     <Badge variant="outline" className={cn(
                                                         "text-[9px] h-5 px-2 uppercase tracking-widest border-0",
-                                                        tx.status === 'completed' ? "bg-emerald-50 text-emerald-600" :
-                                                            tx.status === 'pending' ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-600"
+                                                        tx.status === 'completed' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" :
+                                                            tx.status === 'pending' ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600" : "bg-red-50 dark:bg-red-500/10 text-red-600"
                                                     )}>
                                                         {tx.status}
                                                     </Badge>

@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
     tenant: Tenant;
@@ -100,87 +101,105 @@ export default function BillingIndex({ tenant, plans }: Props) {
             <Head title="Abonnement" />
 
             <div className="flex flex-col gap-8 p-6 max-w-5xl mx-auto">
-                <div className="flex flex-col gap-2 text-center md:text-left">
-                    <h1 className="text-3xl font-bold tracking-tight">Votre Abonnement</h1>
-                    <p className="text-muted-foreground text-lg">Gérez votre plan et passez à la vitesse supérieure quand vous le souhaitez.</p>
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Abonnement & Facturation</h1>
+                    <p className="text-muted-foreground">Gérez votre plan et accédez aux fonctionnalités premium.</p>
                 </div>
 
                 {/* Current Plan Summary */}
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                            <ShieldCheck className="h-8 w-8 text-primary" />
+                <Card className="bg-card border-border/50 shadow-sm">
+                    <CardContent className="flex flex-col md:flex-row items-center justify-between gap-6 p-6">
+                        <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <ShieldCheck className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-0.5">Plan Actuel</p>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-xl font-semibold text-foreground">{tenant.plan?.name}</h3>
+                                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-medium">
+                                        Actif
+                                    </Badge>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Plan Actuel</p>
-                            <h3 className="text-2xl font-bold">{tenant.plan?.name}</h3>
+
+                        <div className="flex flex-col md:items-end gap-1">
+                            <p className="text-sm font-medium text-foreground">Usage illimité inclus</p>
+                            <p className="text-xs text-muted-foreground">Prochaine facturation automatique</p>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Plans Comparison */}
-                <div className="grid md:grid-cols-2 gap-8 mt-4">
+                <div className="grid md:grid-cols-2 gap-6 mt-2">
                     {plans.map((plan) => {
                         const isCurrent = tenant.plan_id === plan.id;
                         const isBusiness = plan.slug === 'business';
 
                         return (
                             <Card key={plan.id} className={cn(
-                                "relative flex flex-col transition-all duration-300 shadow-sm",
-                                isBusiness ? "border-primary shadow-lg scale-105 z-10" : "border-border",
-                                isCurrent && "opacity-80"
+                                "relative flex flex-col transition-all border-border/60",
+                                isBusiness && "border-primary/40 ring-1 ring-primary/10",
+                                isCurrent && "bg-muted/30"
                             )}>
                                 {isBusiness && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full uppercase tracking-widest">
-                                        Recommandé
+                                    <div className="absolute top-4 right-4">
+                                        <Badge variant="default" className="bg-primary text-primary-foreground text-[10px] uppercase font-bold px-2 py-0">
+                                            Conseillé
+                                        </Badge>
                                     </div>
                                 )}
-                                <CardHeader>
-                                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                                    <CardDescription>
-                                        {plan.slug === 'free' ? 'Idéal pour tester nos services.' : 'Pour les professionnels exigeants.'}
+                                <CardHeader className="p-6">
+                                    <CardTitle className="text-lg font-bold">{plan.name}</CardTitle>
+                                    <CardDescription className="text-sm">
+                                        {plan.slug === 'free' ? 'Idéal pour tester nos services.' : 'Pour les entreprises en croissance.'}
                                     </CardDescription>
-                                    <div className="mt-4">
-                                        <span className="text-4xl font-extrabold">{plan.price_fcfa.toLocaleString()} FCFA</span>
-                                        <span className="text-muted-foreground"> / mois</span>
-                                    </div>
                                 </CardHeader>
-                                <CardContent className="flex-1">
-                                    <ul className="space-y-4">
+                                <CardContent className="p-6 pt-0 flex-1">
+                                    <div className="flex items-baseline gap-1 mb-6">
+                                        <span className="text-3xl font-bold tracking-tight text-foreground">{plan.price_fcfa.toLocaleString()}</span>
+                                        <span className="text-sm font-medium text-muted-foreground uppercase">FCFA/Ans</span>
+                                    </div>
+
+                                    <ul className="space-y-3">
                                         <li className="flex items-start gap-3">
-                                            <CheckCircle2 className={cn("h-5 w-5 mt-0.5", isBusiness ? "text-primary" : "text-muted-foreground")} />
-                                            <span className="text-sm font-medium">
+                                            <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
+                                            <span className="text-sm">
                                                 {plan.commission_rate > 0
-                                                    ? `Commission de ${plan.commission_rate}% sur vos ventes`
-                                                    : "0% de commission sur vos ventes"}
+                                                    ? `Commission de ${plan.commission_rate}%`
+                                                    : "0% de commission"}
                                             </span>
                                         </li>
                                         <li className="flex items-start gap-3">
-                                            <CheckCircle2 className={cn("h-5 w-5 mt-0.5", isBusiness ? "text-primary" : "text-muted-foreground")} />
-                                            <span className="text-sm">Tickets & Support Illimités</span>
+                                            <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
+                                            <span className="text-sm">Ventes & Tickets illimités</span>
                                         </li>
                                         {isBusiness && (
                                             <>
                                                 <li className="flex items-start gap-3">
-                                                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary" />
-                                                    <span className="text-sm font-semibold">Marque Blanche (Support Client)</span>
+                                                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
+                                                    <span className="text-sm">Dashboard Marque Blanche</span>
                                                 </li>
                                                 <li className="flex items-start gap-3">
-                                                    <CheckCircle2 className="h-5 w-5 mt-0.5 text-primary" />
-                                                    <span className="text-sm font-semibold">Accès complet à l'API</span>
+                                                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
+                                                    <span className="text-sm">Accès complet à l'API</span>
                                                 </li>
                                             </>
                                         )}
                                     </ul>
                                 </CardContent>
-                                <CardFooter>
+                                <CardFooter className="p-6 pt-0 mt-auto">
                                     {isCurrent ? (
-                                        <Button className="w-full py-6" disabled variant="outline">Plan Actuel</Button>
+                                        <Button className="w-full" variant="secondary" disabled>
+                                            Votre plan actuel
+                                        </Button>
                                     ) : (
                                         <Button
-                                            className={cn("w-full py-6 text-lg transition-all", isBusiness && "bg-primary hover:bg-primary/90")}
+                                            className={cn("w-full transition-all", isBusiness ? "bg-primary" : "bg-muted-foreground/10 hover:bg-muted-foreground/20 text-foreground")}
                                             onClick={() => openPaymentModal(plan)}
                                             disabled={processing}
+                                            variant={isBusiness ? "default" : "secondary"}
                                         >
                                             {plan.price_fcfa > 0 ? 'Passer à Business' : 'Choisir ce plan'}
                                         </Button>
@@ -239,8 +258,8 @@ export default function BillingIndex({ tenant, plans }: Props) {
                         ) : paymentStatus === 'success' ? (
                             <div className="py-10 text-center space-y-6 animate-in fade-in zoom-in duration-300">
                                 <div className="flex justify-center">
-                                    <div className="h-24 w-24 rounded-full bg-green-100 flex items-center justify-center">
-                                        <CheckCircle2 className="h-12 w-12 text-green-600" />
+                                    <div className="h-24 w-24 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                                        <CheckCircle2 className="h-12 w-12 text-green-500" />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -256,8 +275,8 @@ export default function BillingIndex({ tenant, plans }: Props) {
                         ) : paymentStatus === 'failed' ? (
                             <div className="py-10 text-center space-y-6">
                                 <div className="flex justify-center">
-                                    <div className="h-20 w-20 rounded-full bg-red-100 flex items-center justify-center">
-                                        <AlertCircle className="h-10 w-10 text-red-600" />
+                                    <div className="h-20 w-20 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                        <AlertCircle className="h-10 w-10 text-red-500" />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -290,15 +309,15 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                     </p>
                                 </div>
 
-                                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 space-y-3 mx-4">
-                                    <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold uppercase tracking-wider text-sm">
+                                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-5 space-y-3 mx-4">
+                                    <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-sm">
                                         <Hash className="h-4 w-4" />
                                         Code de validation
                                     </div>
-                                    <div className="text-4xl font-black tracking-[0.2em] text-emerald-600">
+                                    <div className="text-4xl font-black tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
                                         {getUssdCode()}
                                     </div>
-                                    <p className="text-xs text-emerald-600 font-medium">
+                                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                                         Composez ce code si aucune notification n'apparaît.
                                     </p>
                                 </div>

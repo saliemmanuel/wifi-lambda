@@ -11,6 +11,9 @@ Route::prefix('{tenant_slug}')->middleware(['tenant'])->group(function () {
     Route::get('/buy/check-status/{reference}', [\App\Http\Controllers\Public\ShopController::class, 'checkStatus'])->name('tenant.shop.check-status');
     Route::post('/buy/retrieve', [\App\Http\Controllers\Public\ShopController::class, 'retrieveVoucher'])->name('tenant.shop.retrieve');
     Route::get('/buy/download-pdf/{reference}', [\App\Http\Controllers\Public\ShopController::class, 'downloadPdf'])->name('tenant.shop.download-pdf');
+    
+    // Zone Specific Shop
+    Route::get('/buy/zone/{zone}', [\App\Http\Controllers\Public\ShopController::class, 'index'])->name('tenant.shop.zone');
 
     // Protected Routes - AUTH REQUIRED
     Route::middleware(['auth'])->group(function () {
@@ -38,6 +41,8 @@ Route::prefix('{tenant_slug}')->middleware(['tenant'])->group(function () {
             Route::post('/wifi/packages', [\App\Http\Controllers\Tenant\WifiPackageController::class, 'store'])->name('tenant.wifi.packages.store');
             Route::put('/wifi/packages/{package}', [\App\Http\Controllers\Tenant\WifiPackageController::class, 'update'])->name('tenant.wifi.packages.update');
             Route::delete('/wifi/packages/{package}', [\App\Http\Controllers\Tenant\WifiPackageController::class, 'destroy'])->name('tenant.wifi.packages.destroy');
+            
+            Route::get('/wifi/statistics', [\App\Http\Controllers\Tenant\StatisticsController::class, 'index'])->name('tenant.wifi.statistics');
 
             Route::get('/zones', [\App\Http\Controllers\Tenant\ZoneController::class, 'index'])->name('tenant.zones');
             Route::post('/zones', [\App\Http\Controllers\Tenant\ZoneController::class, 'store'])->name('tenant.zones.store');

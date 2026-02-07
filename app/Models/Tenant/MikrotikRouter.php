@@ -8,9 +8,27 @@ use Illuminate\Database\Eloquent\Model;
 class MikrotikRouter extends TenantModel
 {
     use HasFactory;
+    
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->slug)) {
+                $model->slug = \Illuminate\Support\Str::slug($model->name) . '-' . \Illuminate\Support\Str::random(6);
+            }
+        });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('name') && empty($model->slug)) {
+                 $model->slug = \Illuminate\Support\Str::slug($model->name) . '-' . \Illuminate\Support\Str::random(6);
+            }
+        });
+    }
 
     protected $fillable = [
         'name',
+        'slug',
+        'description',
+        'contact',
         'router_model',
         'ip_address',
         'port',
