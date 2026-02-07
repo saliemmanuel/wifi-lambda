@@ -22,7 +22,7 @@ class WifiPackageController extends Controller
     public function store(Request $request, $tenant_slug)
     {
         $validated = $request->validate([
-            'mikrotik_router_id' => 'nullable|exists:mikrotik_routers,id',
+            'mikrotik_router_id' => 'nullable|exists:tenant.mikrotik_routers,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price_fcfa' => 'required|integer|min:0',
@@ -43,7 +43,7 @@ class WifiPackageController extends Controller
         $package = WifiPackage::findOrFail($id);
 
         $validated = $request->validate([
-            'mikrotik_router_id' => 'nullable|exists:mikrotik_routers,id',
+            'mikrotik_router_id' => 'nullable|exists:tenant.mikrotik_routers,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price_fcfa' => 'required|integer|min:0',

@@ -76,7 +76,7 @@ class WithdrawalController extends Controller
     public function initiate(Request $request)
     {
         $request->validate([
-            'method_id' => 'required|exists:withdrawal_methods,id',
+            'method_id' => 'required|exists:tenant.withdrawal_methods,id',
             'amount' => 'required|integer|min:100', // Example min amount
         ]);
 
