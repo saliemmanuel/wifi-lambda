@@ -26,7 +26,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Plus, MapPin, Edit2, Trash2, Copy, Globe, AlertCircle, Wifi, Tag, FileText, Monitor, Phone, Info, List, Code, Check } from 'lucide-react';
+import { Plus, MapPin, Edit2, Trash2, Copy, Globe, AlertCircle, Wifi, Tag, FileText, Monitor, Phone, Info, List, Code, Check, QrCode, Download } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from "sonner";
@@ -59,6 +60,8 @@ export default function ZonesIndex({ zones }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedIntegrationZone, setSelectedIntegrationZone] = useState<Zone | null>(null);
     const [isIntegrationModalOpen, setIsIntegrationModalOpen] = useState(false);
+    const [selectedQrZone, setSelectedQrZone] = useState<Zone | null>(null);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Configuration', href: '#' },
@@ -220,6 +223,31 @@ export default function ZonesIndex({ zones }: Props) {
         } else {
             toast.error("Échec de la copie");
         }
+    };
+
+    const downloadQRCode = () => {
+        const svg = document.getElementById("zone-qr-code");
+        if (!svg) return;
+
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+        img.onload = () => {
+            canvas.width = img.width + 40;
+            canvas.height = img.height + 40;
+            if (ctx) {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 20, 20);
+                const pngFile = canvas.toDataURL("image/png");
+                const downloadLink = document.createElement("a");
+                downloadLink.download = `qr-code-${selectedQrZone?.slug || 'zone'}.png`;
+                downloadLink.href = pngFile;
+                downloadLink.click();
+            }
+        };
+        img.src = "data:image/svg+xml;base64," + btoa(svgData);
     };
 
     return (
@@ -439,6 +467,19 @@ export default function ZonesIndex({ zones }: Props) {
                                                     <Code className="h-3.5 w-3.5" />
                                                     Code d'intégration
                                                 </Button>
+
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 gap-2 rounded-full font-bold text-[10px] uppercase tracking-wider px-4 shadow-sm bg-slate-50 hover:bg-slate-100"
+                                                    onClick={() => {
+                                                        setSelectedQrZone(zone);
+                                                        setIsQrModalOpen(true);
+                                                    }}
+                                                >
+                                                    <QrCode className="h-3.5 w-3.5" />
+                                                    Code QR
+                                                </Button>
                                             </div>
                                         </TableCell>
 
@@ -553,6 +594,55 @@ export default function ZonesIndex({ zones }: Props) {
                         >
                             <Copy className="h-3.5 w-3.5 mr-2" />
                             Copier le Code
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
+                <DialogContent className="sm:max-w-md overflow-hidden p-0">
+                    <DialogHeader className="p-6 pb-2 text-center">
+                        <DialogTitle className="text-xl font-bold tracking-tight">Partager la Zone</DialogTitle>
+                        <DialogDescription className="font-medium text-xs uppercase tracking-wider">
+                            Zone : {selectedQrZone?.name}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="p-8 flex flex-col items-center justify-center gap-6">
+                        <div className="bg-white p-6 rounded-3xl shadow-2xl border border-slate-100">
+                            {selectedQrZone && (
+                                <QRCodeSVG
+                                    id="zone-qr-code"
+                                    value={`${window.location.origin}/${tenant?.slug}/buy/zone/${selectedQrZone.slug || selectedQrZone.id}`}
+                                    size={220}
+                                    level="H"
+                                    includeMargin={false}
+                                />
+                            )}
+                        </div>
+
+                        <div className="text-center space-y-2">
+                            <p className="text-sm font-bold text-slate-900 leading-tight">Scanner pour accéder à la boutique</p>
+                            <p className="text-[11px] text-muted-foreground font-medium px-4">
+                                Scannez ce code avec votre téléphone portable pour acheter instantanément vos tickets WiFi.
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="p-6 bg-muted/30 border-t flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsQrModalOpen(false)}
+                            className="w-full sm:w-auto font-bold text-xs uppercase tracking-widest px-8"
+                        >
+                            Fermer
+                        </Button>
+                        <Button
+                            className="w-full sm:w-auto font-bold text-xs uppercase tracking-widest px-8 bg-slate-900 hover:bg-slate-800 text-white"
+                            onClick={downloadQRCode}
+                        >
+                            <Download className="h-3.5 w-3.5 mr-2" />
+                            Télécharger l'image
                         </Button>
                     </DialogFooter>
                 </DialogContent>
