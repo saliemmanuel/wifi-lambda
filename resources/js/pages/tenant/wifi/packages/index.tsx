@@ -186,7 +186,7 @@ export default function WifiPackagesIndex({ packages, zones }: Props) {
                                 <Plus className="h-4 w-4" /> Créer un nouveau tarif
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-xl">
+                        <DialogContent className="sm:max-w-xl max-h-[95vh] overflow-y-auto">
                             <DialogHeader>
                                 <DialogTitle className="flex items-center gap-2">
                                     <Tag className="h-5 w-5" />

@@ -233,7 +233,7 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                                 <span>Retrouver mon ticket</span>
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
+                        <DialogContent className="sm:max-w-md max-h-[95vh] overflow-y-auto">
                             <DialogHeader>
                                 <DialogTitle className="text-xl font-black uppercase italic">Récupérer un ticket</DialogTitle>
                                 <DialogDescription className="font-medium">
@@ -341,7 +341,7 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
 
             {/* Payment Flow Modal */}
             <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-                <DialogContent className="sm:max-w-md rounded-[32px] p-0 overflow-hidden">
+                <DialogContent className="sm:max-w-md rounded-[32px] p-0 max-h-[95vh] overflow-y-auto">
                     {!purchasedVoucher ? (
                         <div className="p-8">
                             <div className="text-center mb-8">

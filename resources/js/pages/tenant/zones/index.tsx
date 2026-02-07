@@ -233,13 +233,36 @@ export default function ZonesIndex({ zones }: Props) {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         const img = new Image();
+
         img.onload = () => {
-            canvas.width = img.width + 40;
-            canvas.height = img.height + 40;
+            // Set canvas size (QR + padding for text)
+            const padding = 80;
+            canvas.width = img.width + 60;
+            canvas.height = img.height + 140; // Extra space for title and footer
+
             if (ctx) {
+                // 1. Background
                 ctx.fillStyle = "white";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 20, 20);
+
+                // 2. Zone Name (Title)
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 20px Inter, sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(selectedQrZone?.name || "Zone WiFi", canvas.width / 2, 40);
+
+                // 3. QR Code image
+                ctx.drawImage(img, 30, 60);
+
+                // 4. Instructions (Footer)
+                ctx.fillStyle = "#4b5563";
+                ctx.font = "bold 16px Inter, sans-serif";
+                ctx.fillText("SCANNEZ ICI", canvas.width / 2, canvas.height - 45);
+
+                ctx.font = "12px Inter, sans-serif";
+                ctx.fillStyle = "#9ca3af";
+                ctx.fillText("Pour acheter votre ticket WiFi", canvas.width / 2, canvas.height - 25);
+
                 const pngFile = canvas.toDataURL("image/png");
                 const downloadLink = document.createElement("a");
                 downloadLink.download = `qr-code-${selectedQrZone?.slug || 'zone'}.png`;
@@ -600,7 +623,7 @@ export default function ZonesIndex({ zones }: Props) {
             </Dialog>
 
             <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
-                <DialogContent className="sm:max-w-md overflow-hidden p-0">
+                <DialogContent className="sm:max-w-md p-0 max-h-[95vh] overflow-y-auto">
                     <DialogHeader className="p-6 pb-2 text-center">
                         <DialogTitle className="text-xl font-bold tracking-tight">Partager la Zone</DialogTitle>
                         <DialogDescription className="font-medium text-xs uppercase tracking-wider">
