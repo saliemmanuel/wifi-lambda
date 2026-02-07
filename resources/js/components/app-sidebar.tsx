@@ -66,14 +66,14 @@ export function AppSidebar() {
                 icon: LayoutGrid,
             },
             {
-                title: 'Forfaits & Prix',
-                href: `/${tenant.slug}/wifi/packages`,
-                icon: CreditCard,
-            },
-            {
                 title: 'Gestion des Zones',
                 href: `/${tenant.slug}/zones`,
                 icon: MapPin,
+            },
+            {
+                title: 'Forfaits & Prix',
+                href: `/${tenant.slug}/wifi/packages`,
+                icon: CreditCard,
             },
             {
                 title: 'Stock de Tickets',

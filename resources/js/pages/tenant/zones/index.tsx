@@ -30,6 +30,7 @@ import { Plus, MapPin, Edit2, Trash2, Copy, Globe, AlertCircle, Wifi, Tag, FileT
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from "sonner";
+import { copyTextToClipboard } from '@/lib/utils';
 
 interface Zone {
     id: number;
@@ -133,12 +134,18 @@ export default function ZonesIndex({ zones }: Props) {
         }
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast.success("Lien copié !", {
-            description: "Le lien de la boutique a été copié dans le presse-papier.",
-            duration: 3000,
-        });
+    const copyToClipboard = async (text: string) => {
+        const success = await copyTextToClipboard(text);
+        if (success) {
+            toast.success("Lien copié !", {
+                description: "Le lien de la boutique a été copié dans le presse-papier.",
+                duration: 3000,
+            });
+        } else {
+            toast.error("Échec de la copie", {
+                description: "Veuillez copier le lien manuellement.",
+            });
+        }
     };
 
     const filteredZones = zones.filter(zone =>
@@ -202,13 +209,17 @@ export default function ZonesIndex({ zones }: Props) {
 </div>`;
     };
 
-    const copyIntegrationCode = (zone: Zone) => {
+    const copyIntegrationCode = async (zone: Zone) => {
         const code = getIntegrationCode(zone);
-        navigator.clipboard.writeText(code);
-        toast.success("Code copié !", {
-            description: "Le code d'intégration a été copié dans le presse-papier.",
-            duration: 3000,
-        });
+        const success = await copyTextToClipboard(code);
+        if (success) {
+            toast.success("Code copié !", {
+                description: "Le code d'intégration a été copié dans le presse-papier.",
+                duration: 3000,
+            });
+        } else {
+            toast.error("Échec de la copie");
+        }
     };
 
     return (
