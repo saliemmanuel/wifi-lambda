@@ -33,7 +33,8 @@ RUN apk add --no-cache \
     unzip \
     git \
     icu-dev \
-    oniguruma-dev
+    oniguruma-dev \
+    netcat-openbsd
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -49,7 +50,8 @@ COPY --from=build-assets /app/public/build ./public/build
 COPY --from=build-assets /app/vendor ./vendor
 
 # Set permissions
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
 
 # Production settings
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -59,4 +61,4 @@ COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
 
 ENTRYPOINT ["docker-entrypoint"]
-CMD ["frankenphp", "php-server"]
+CMD ["php-server"]
