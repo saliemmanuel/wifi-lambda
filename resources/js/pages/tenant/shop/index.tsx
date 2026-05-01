@@ -228,7 +228,7 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
 
                     <Dialog open={isRetrieveModalOpen} onOpenChange={setIsRetrieveModalOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="font-bold text-slate-500 hover:text-primary rounded-xl">
+                            <Button variant="ghost" size="sm" className="gap-2">
                                 <History className="size-4" />
                                 <span>Retrouver mon ticket</span>
                             </Button>
@@ -242,10 +242,10 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                             </DialogHeader>
                             <form onSubmit={handleRetrieveVoucher} className="space-y-4 pt-2">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-slate-400">Référence de Transaction</Label>
+                                    <Label htmlFor="ref">Référence de Transaction</Label>
                                     <Input
+                                        id="ref"
                                         placeholder="Ex: MP..."
-                                        className="h-11 rounded-xl font-bold"
                                         value={recoveryRef}
                                         onChange={e => setRecoveryRef(e.target.value)}
                                         required
@@ -254,7 +254,7 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                                         <p className="text-xs font-bold text-red-500">{recoveryError}</p>
                                     )}
                                 </div>
-                                <Button className="w-full rounded-xl font-bold uppercase" disabled={isRecovering}>
+                                <Button className="w-full" disabled={isRecovering}>
                                     {isRecovering ? <Loader2 className="size-4 animate-spin" /> : "Vérifier la référence"}
                                 </Button>
                             </form>
@@ -306,7 +306,7 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                             </CardContent>
                             <CardFooter className="p-8 pt-4">
                                 <Button
-                                    className="w-full h-12 rounded-xl font-black uppercase text-[11px] tracking-widest transition-all active:scale-95 disabled:grayscale"
+                                    className="w-full"
                                     disabled={pkg.available_count === 0}
                                     size="lg"
                                     onClick={() => openPaymentModal(pkg)}
@@ -361,15 +361,16 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                                         </div>
                                     )}
 
-                                    <div className="space-y-3">
-                                        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Numéro Mobile Money (Cameroun)</Label>
-                                        <div className="relative group">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 border-r border-slate-200 pr-3 z-10 transition-colors group-focus-within:border-primary/30">
-                                                <span className="font-black text-slate-400 text-sm tracking-tight">+237</span>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="phone">Numéro Mobile Money (Cameroun)</Label>
+                                        <div className="flex gap-2">
+                                            <div className="flex items-center justify-center px-3 border rounded-md bg-muted text-sm font-medium">
+                                                +237
                                             </div>
                                             <Input
+                                                id="phone"
                                                 placeholder="6XXXXXXXX"
-                                                className="h-14 pl-20 text-lg font-black bg-slate-50 border-slate-100 focus-visible:ring-primary/10 focus-visible:border-primary focus-visible:bg-white rounded-xl transition-all shadow-sm"
+                                                className="flex-1"
                                                 value={phoneNumber}
                                                 onChange={e => setPhoneNumber(e.target.value)}
                                                 required
@@ -377,9 +378,8 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                                         </div>
                                     </div>
                                     <Button
-                                        className="w-full h-14 rounded-xl font-black uppercase text-[12px] tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                                        className="w-full h-11"
                                         disabled={isInitiating}
-                                        size="lg"
                                     >
                                         {isInitiating ? <Loader2 className="size-5 animate-spin" /> : "Payer maintenant"}
                                     </Button>
@@ -434,7 +434,8 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            className="h-9 rounded-lg text-xs font-bold uppercase tracking-wider"
+                                            size="sm"
+                                            className="w-full"
                                             onClick={() => setPaymentError("Veuillez patienter ou vérifier l'historique.")} // Placeholder or reload status
                                             disabled={true} // Auto-checking in background
                                         >
@@ -476,13 +477,22 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                                 </div>
 
                                 <div className="grid gap-3 pt-4">
-                                    <Button variant="outline" className="h-12 rounded-xl font-bold uppercase text-[11px] tracking-wider" onClick={() => window.open(`/${tenant_slug}/buy/download-pdf/${campayRef}`, '_blank')}>
-                                        <Download className="size-4 mr-2" /> Télécharger en PDF
+                                    <Button 
+                                        className="w-full h-14 text-lg font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/25"
+                                        onClick={() => window.location.href = 'http://google.com'}
+                                    >
+                                        <Wifi className="size-5 mr-2" /> Me connecter maintenant
                                     </Button>
-                                    <Button variant="outline" className="h-12 rounded-xl font-bold uppercase text-[11px] tracking-wider" onClick={printVoucher}>
-                                        <Printer className="size-4 mr-2" /> Imprimer le ticket
-                                    </Button>
-                                    <Button className="h-12 rounded-xl font-bold uppercase text-[11px] tracking-wider" onClick={() => window.location.reload()}>Terminer</Button>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Button variant="outline" onClick={() => window.open(`/${tenant_slug}/buy/download-pdf/${campayRef}`, '_blank')}>
+                                            <Download className="size-4 mr-2" /> PDF
+                                        </Button>
+                                        <Button variant="outline" onClick={printVoucher}>
+                                            <Printer className="size-4 mr-2" /> Imprimer
+                                        </Button>
+                                    </div>
+                                    <Button variant="ghost" className="w-full text-muted-foreground font-bold" onClick={() => window.location.reload()}>Terminer</Button>
                                 </div>
                             </div>
                         </div>

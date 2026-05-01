@@ -81,7 +81,7 @@ export default function OnboardingWizard({ tenant }: Props) {
                                         <Gift className="h-5 w-5 text-orange-600" />
                                     </div>
                                     <CardTitle>Une dernière chose !</CardTitle>
-                                    <CardDescription>Comment avez-vous entendu parler de Wi-Fi Lambda ?</CardDescription>
+                                    <CardDescription>Comment avez-vous entendu parler de ZAWIFI ?</CardDescription>
                                 </>
                             )}
                         </CardHeader>
@@ -186,7 +186,7 @@ export default function OnboardingWizard({ tenant }: Props) {
                 </Card>
 
                 <p className="text-center text-slate-400 text-xs font-medium uppercase tracking-widest opacity-60">
-                    Configuration Sécurisée &bull; Wi-Fi Lambda &copy; 2026
+                    Configuration Sécurisée &bull; ZAWIFI &copy; 2026
                 </p>
             </div>
         </div>

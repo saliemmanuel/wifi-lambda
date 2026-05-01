@@ -20,12 +20,6 @@ class EnsureOnboardingIsCompleted
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $tenant = $this->tenantService->getCurrentTenant();
-
-        if ($tenant && !$tenant->onboarding_completed_at && !$request->routeIs('tenant.onboarding')) {
-            return redirect()->route('tenant.onboarding', ['tenant_slug' => $tenant->slug]);
-        }
-
         return $next($request);
     }
 }

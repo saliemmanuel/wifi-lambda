@@ -25,7 +25,8 @@ class SetupTenantController extends Controller
             return redirect()->route('tenant.dashboard', ['tenant_slug' => $tenant->slug]);
         }
 
-        return Inertia::render('setup/create-tenant');
+        // Auto-create tenant and redirect
+        return $this->store(request());
     }
 
     public function store(Request $request)

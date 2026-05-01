@@ -25,12 +25,12 @@ interface Props {
         sold_this_month: number;
         revenue_this_month: number;
         active_sessions: number;
-        balance: number;
         revenue_total: number;
         tickets_sold_total: number;
         withdrawals_total: number;
         revenue_today: number;
         tickets_sold_today: number;
+        revenue_available: number;
     };
     charts: {
         sales: {
@@ -80,14 +80,15 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
     }));
 
     const cards = [
+
         {
-            title: "MON SOLDE DISPONIBLE",
-            value: `${stats.balance.toLocaleString()} XAF`,
-            subtext: "Solde actuel",
+            title: "SOLDE RETIRABLE",
+            value: `${stats.revenue_available.toLocaleString()} XAF`,
+            subtext: "Somme retirable",
             icon: Wallet,
-            color: "text-blue-500",
-            bg: "bg-blue-50",
-            border: "border-blue-100"
+            color: "text-indigo-600",
+            bg: "bg-indigo-50",
+            border: "border-indigo-100"
         },
         {
             title: "CHIFFRE D'AFFAIRES TOTAL",
@@ -149,24 +150,22 @@ export default function TenantDashboard({ stats, charts, recent_vouchers }: Prop
                         <p className="text-muted-foreground">Gérez vos ventes et suivez vos performances en temps réel.</p>
                     </div>
 
-                    <Card className="bg-card shadow-sm border-border/50">
-                        <CardContent className="flex items-center gap-3 p-3 px-4">
-                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                <ShieldCheck className="h-5 w-5" />
+                    <div className="flex items-center gap-3 p-3 px-4 rounded-2xl bg-primary/5 border border-primary/10 shadow-sm hover:bg-primary/10 transition-colors cursor-default">
+                        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                            <ShieldCheck className="h-6 w-6 stroke-[2.5px]" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Abonnement</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-base font-black text-foreground">{tenant?.plan?.name || 'Gratuit'}</span>
+                                {(tenant?.plan?.commission_rate ?? 0) > 0 && (
+                                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[9px] h-4 px-1 font-bold">
+                                        {tenant?.plan?.commission_rate}% Com.
+                                    </Badge>
+                                )}
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Abonnement</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-bold text-foreground">{tenant?.plan?.name || 'Gratuit'}</span>
-                                    {(tenant?.plan?.commission_rate ?? 0) > 0 && (
-                                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[9px] h-4 px-1 font-medium">
-                                            {tenant?.plan?.commission_rate}% Com.
-                                        </Badge>
-                                    )}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Main Content Grid - Metric Cards */}

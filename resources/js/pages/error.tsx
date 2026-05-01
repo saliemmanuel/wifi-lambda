@@ -74,7 +74,7 @@ export default function Error({ status, message }: Props) {
                 </Card>
 
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    Sécurité Wi-Fi Lambda &bull; 2026
+                    Sécurité ZAWIFI &bull; 2026
                 </p>
             </div>
         </div>

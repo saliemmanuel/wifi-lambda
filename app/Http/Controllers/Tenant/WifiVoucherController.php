@@ -151,6 +151,43 @@ class WifiVoucherController extends Controller
         return back()->with('success', "Importation réussie : {$importedCount} ajoutés.");
     }
 
+    public function store(Request $request, $tenant_slug)
+    {
+        $request->validate([
+            'username' => 'required|string|max:50|unique:tenant.wifi_vouchers,username',
+            'password' => 'required|string|max:50',
+            'package_id' => 'required|exists:tenant.wifi_packages,id',
+            'zone_id' => 'nullable|string', // 'all' or ID
+            'profile_name' => 'nullable|string|max:100',
+            'time_limit' => 'nullable|string|max:50',
+            'comment' => 'nullable|string|max:255',
+        ]);
+
+        $zoneInput = $request->input('zone_id');
+        $hotspotId = ($zoneInput && $zoneInput !== 'all') ? (int)$zoneInput : null;
+
+        if ($hotspotId) {
+             $exists = MikrotikRouter::where('id', $hotspotId)->exists();
+             if (!$exists) {
+                 return back()->withErrors(['zone_id' => 'Zone invalide.']);
+             }
+        }
+
+        WifiVoucher::create([
+            'package_id' => $request->package_id,
+            'hotspot_id' => $hotspotId,
+            'username' => $request->username,
+            'password' => $request->password,
+            'profile_name' => $request->profile_name,
+            'time_limit' => $request->time_limit,
+            'comment' => $request->comment,
+            'status' => 'available',
+            'import_status' => 'manual',
+        ]);
+
+        return back()->with('success', 'Ticket ajouté manuellement avec succès.');
+    }
+
     public function destroy($tenant_slug, $id)
     {
         WifiVoucher::findOrFail($id)->delete();

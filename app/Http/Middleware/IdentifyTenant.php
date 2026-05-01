@@ -48,8 +48,8 @@ class IdentifyTenant
             if (auth()->check()) {
                 $user = auth()->user();
                 
-                // Allow Super Admin (logic: email ends with @wifi-lambda.com)
-                $isSuperAdmin = str_ends_with($user->email, '@wifi-lambda.com');
+                // Allow Super Admin (logic: email ends with @zawifi.com)
+                $isSuperAdmin = str_ends_with($user->email, '@zawifi.com');
                 
                 if (!$isSuperAdmin && $tenant->owner_id !== $user->id) {
                     // This user is logged in but doesn't own this tenant!

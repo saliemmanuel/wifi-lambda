@@ -63,7 +63,7 @@ export default function CreateTenant() {
                 </Card>
 
                 <p className="text-center text-slate-400 text-xs font-medium uppercase tracking-widest opacity-60">
-                    Système Sécurisé &bull; Wi-Fi Lambda &copy; 2026
+                    Système Sécurisé &bull; ZAWIFI &copy; 2026
                 </p>
             </div>
         </div>

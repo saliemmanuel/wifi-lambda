@@ -18,9 +18,6 @@ Route::prefix('{tenant_slug}')->middleware(['tenant'])->group(function () {
     // Protected Routes - AUTH REQUIRED
     Route::middleware(['auth'])->group(function () {
         
-        // Onboarding
-        Route::get('/onboarding', [\App\Http\Controllers\Tenant\OnboardingController::class, 'show'])->name('tenant.onboarding');
-        Route::post('/onboarding', [\App\Http\Controllers\Tenant\OnboardingController::class, 'store']);
 
         // Routes protected by onboarding
         Route::middleware(['onboarded'])->group(function () {
@@ -33,6 +30,7 @@ Route::prefix('{tenant_slug}')->middleware(['tenant'])->group(function () {
 
             // Wi-Fi
             Route::get('/wifi/vouchers', [\App\Http\Controllers\Tenant\WifiVoucherController::class, 'index'])->name('tenant.wifi.vouchers');
+            Route::post('/wifi/vouchers', [\App\Http\Controllers\Tenant\WifiVoucherController::class, 'store'])->name('tenant.wifi.vouchers.store');
             Route::post('/wifi/vouchers/import', [\App\Http\Controllers\Tenant\WifiVoucherController::class, 'import'])->name('tenant.wifi.vouchers.import');
             Route::delete('/wifi/vouchers/bulk-delete', [\App\Http\Controllers\Tenant\WifiVoucherController::class, 'bulkDestroy'])->name('tenant.wifi.vouchers.bulk-delete');
             Route::delete('/wifi/vouchers/{voucher}', [\App\Http\Controllers\Tenant\WifiVoucherController::class, 'destroy'])->name('tenant.wifi.vouchers.destroy');
@@ -51,6 +49,7 @@ Route::prefix('{tenant_slug}')->middleware(['tenant'])->group(function () {
 
             Route::get('/transactions', [\App\Http\Controllers\Tenant\TransactionController::class, 'index'])->name('tenant.transactions');
             Route::get('/transactions/{transaction}', [\App\Http\Controllers\Tenant\TransactionController::class, 'show'])->name('tenant.transactions.show');
+            Route::post('/transactions/{transaction}/sync', [\App\Http\Controllers\Tenant\TransactionController::class, 'sync'])->name('tenant.transactions.sync');
 
             // Withdrawals (Retraits)
             Route::prefix('withdrawals')->name('tenant.withdrawals.')->group(function () {
@@ -58,6 +57,7 @@ Route::prefix('{tenant_slug}')->middleware(['tenant'])->group(function () {
                 Route::post('/methods', [\App\Http\Controllers\Tenant\WithdrawalController::class, 'addMethod'])->name('methods.store');
                 Route::delete('/methods/{id}', [\App\Http\Controllers\Tenant\WithdrawalController::class, 'deleteMethod'])->name('methods.destroy');
                 Route::post('/initiate', [\App\Http\Controllers\Tenant\WithdrawalController::class, 'initiate'])->name('initiate');
+                Route::post('/{id}/check-status', [\App\Http\Controllers\Tenant\WithdrawalController::class, 'checkStatus'])->name('check-status');
             });
             
             // Billing & Plans

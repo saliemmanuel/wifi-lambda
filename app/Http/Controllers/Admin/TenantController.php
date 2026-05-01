@@ -41,4 +41,54 @@ class TenantController extends Controller
 
         return back()->with('success', "Tenant status updated to {$newStatus}.");
     }
+
+    public function upgradeToBusiness(Tenant $tenant)
+    {
+        $businessPlan = \App\Models\Plan::where('slug', 'business')->first();
+
+        if (!$businessPlan) {
+            return back()->with('error', "Le plan Business n'existe pas dans la base de données.");
+        }
+
+        $tenant->update([
+            'plan_id' => $businessPlan->id,
+            'status' => 'active',
+        ]);
+
+        // Update or create an active subscription for consistency
+        \App\Models\Subscription::updateOrCreate(
+            ['tenant_id' => $tenant->id, 'status' => 'active'],
+            [
+                'plan_id' => $businessPlan->id,
+                'starts_at' => now(),
+            ]
+        );
+
+        return back()->with('success', "Le tenant {$tenant->name} a été passé au plan Business.");
+    }
+
+    public function downgradeToFree(Tenant $tenant)
+    {
+        $freePlan = \App\Models\Plan::where('slug', 'free')->first();
+
+        if (!$freePlan) {
+            return back()->with('error', "Le plan Gratuit n'existe pas dans la base de données.");
+        }
+
+        $tenant->update([
+            'plan_id' => $freePlan->id,
+            'status' => 'active',
+        ]);
+
+        // Update or create an active subscription for consistency
+        \App\Models\Subscription::updateOrCreate(
+            ['tenant_id' => $tenant->id, 'status' => 'active'],
+            [
+                'plan_id' => $freePlan->id,
+                'starts_at' => now(),
+            ]
+        );
+
+        return back()->with('success', "Le tenant {$tenant->name} a été remis au plan Gratuit.");
+    }
 }

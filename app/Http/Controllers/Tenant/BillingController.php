@@ -46,8 +46,7 @@ class BillingController extends Controller
         
         // 1. Initiate Campay Payment
         $response = $this->campayService->collect([
-            //'amount' => $newPlan->price_fcfa,
-            'amount' => '5', // TESTING: Hardcoded to 5 FCFA
+            'amount' => $newPlan->price_fcfa,
             'phone_number' => $request->phone_number,
             'description' => $description,
             'external_reference' => $externalReference,
@@ -69,7 +68,7 @@ class BillingController extends Controller
                 Payment::create([
                     'tenant_id' => $tenant->id,
                     'subscription_id' => $subscription->id,
-                    'amount_fcfa' => 5,
+                    'amount_fcfa' => $newPlan->price_fcfa,
                     'amount_eur' => (float)$newPlan->price_eur,
                     'payment_type' => 'subscription',
                     'status' => 'pending',

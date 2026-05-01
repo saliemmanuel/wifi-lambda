@@ -103,26 +103,62 @@ class CampayController extends Controller
             return response()->json(['message' => 'Processed Central Payment']);
         }
 
-        // 2. If not found in central, check if it's a Tenant Payment (Voucher Sale)
-        // We look for PaymentAttempt in the tenant DB. 
-        // We need to know which tenant. For now, we can try to find an attempt with this reference across all tenants 
-        // OR better: ensure the external_reference or some data tells us the tenant.
-        
-        $attempt = null;
-        $foundTenant = null;
-
-        // Try to find tenant from external_reference if we format it as "TENANT_{id}_..."
+        // 2. Identify Tenant and Attempt/Withdrawal
         $extRef = $data['external_reference'] ?? '';
+        
         if (str_starts_with($extRef, 'TENANT_')) {
             $parts = explode('_', $extRef);
             $tenantId = $parts[1] ?? null;
             $foundTenant = \App\Models\Tenant::find($tenantId);
+        } elseif (str_starts_with($extRef, 'WDR_')) {
+            $parts = explode('_', $extRef);
+            $tenantId = $parts[1] ?? null;
+            $foundTenant = \App\Models\Tenant::find($tenantId);
+        } elseif (str_starts_with($extRef, 'WDR-')) {
+            // Fallback for old withdrawal reference format: search across all tenants
+            $tenants = \App\Models\Tenant::all();
+            foreach ($tenants as $tenant) {
+                $tenantService = app(\App\Services\TenantService::class);
+                $tenantService->switchTo($tenant);
+                $wdr = \App\Models\Tenant\Withdrawal::where('reference', $extRef)->first();
+                if ($wdr) {
+                    $foundTenant = $tenant;
+                    break;
+                }
+            }
         }
 
         if ($foundTenant) {
             $tenantService = app(\App\Services\TenantService::class);
             $tenantService->switchTo($foundTenant);
 
+            // Check if it's a Withdrawal
+            if (str_starts_with($extRef, 'WDR')) {
+                $withdrawal = \App\Models\Tenant\Withdrawal::where('reference', $extRef)->first();
+                if ($withdrawal) {
+                    if ($withdrawal->status === 'completed') {
+                        return response()->json(['message' => 'Withdrawal already processed']);
+                    }
+
+                    if ($status === 'SUCCESSFUL') {
+                        $withdrawal->update([
+                            'status' => 'completed',
+                            'completed_at' => now(),
+                            'meta' => array_merge($withdrawal->meta ?? [], ['webhook_data' => $data])
+                        ]);
+                    } elseif (in_array($status, ['FAILED', 'CANCELLED'])) {
+                        $withdrawal->update([
+                            'status' => 'failed',
+                            'completed_at' => now(),
+                            'error_message' => $data['reason'] ?? 'Webhook signaled failure',
+                            'meta' => array_merge($withdrawal->meta ?? [], ['webhook_data' => $data])
+                        ]);
+                    }
+                    return response()->json(['message' => 'Processed Withdrawal']);
+                }
+            }
+
+            // Check if it's a Payment Attempt (Voucher Sale)
             $attempt = \App\Models\Tenant\PaymentAttempt::where('reference', $reference)->first();
             
             if ($attempt) {

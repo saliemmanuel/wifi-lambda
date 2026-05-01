@@ -11,10 +11,10 @@ This guide explains how to deploy the application to a VPS that already hosts ot
 ## Setup Steps
 
 1.  **Copy Files to VPS**:
-    Upload the project files to your VPS (e.g., `/var/www/wifi-lambda`).
+    Upload the project files to your VPS (e.g., `/var/www/zawifi`).
 
     ```bash
-    scp -r . user@your-vps-ip:/var/www/wifi-lambda
+    scp -r . user@your-vps-ip:/var/www/zawifi
     ```
 
 2.  **Configure Environment**:
@@ -49,7 +49,7 @@ You need to configure your main web server to forward requests for your new doma
 
 ### Option A: If your host uses Nginx
 
-Create a new server block file (e.g., `/etc/nginx/sites-available/wifi-lambda`):
+Create a new server block file (e.g., `/etc/nginx/sites-available/zawifi`):
 
 ```nginx
 server {
@@ -68,7 +68,7 @@ server {
 
 Enable it and reload Nginx:
 ```bash
-ln -s /etc/nginx/sites-available/wifi-lambda /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/zawifi /etc/nginx/sites-enabled/
 nginx -t
 systemctl reload nginx
 ```

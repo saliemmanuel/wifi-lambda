@@ -22,7 +22,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import { Trash2, MoreVertical, Upload, Ticket, Search, Filter, MoreHorizontal, Download, Hash, Clock, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, MoreVertical, Upload, Ticket, Search, Filter, MoreHorizontal, Download, Hash, Clock, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { SharedData } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -91,6 +91,7 @@ interface Props {
 export default function VouchersIndex({ vouchers, packages, zones, filters, stats_summary }: Props) {
     const { tenant } = usePage<SharedData>().props;
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [searchValue, setSearchValue] = useState(filters.search || '');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -104,8 +105,15 @@ export default function VouchersIndex({ vouchers, packages, zones, filters, stat
         { title: 'Stock de Tickets', href: `/${tenant?.slug}/wifi/vouchers` },
     ];
 
-    const { data: importData, setData: setImportData, post, processing, errors, reset } = useForm({
+    const { data: importData, setData: setImportData, post: postImport, processing: importProcessing, errors: importErrors, reset: resetImport } = useForm({
         file: null as File | null,
+        package_id: '',
+        zone_id: '',
+    });
+
+    const { data: addData, setData: setAddData, post: postAdd, processing: addProcessing, errors: addErrors, reset: resetAdd } = useForm({
+        username: '',
+        password: '',
         package_id: '',
         zone_id: '',
     });
@@ -135,11 +143,21 @@ export default function VouchersIndex({ vouchers, packages, zones, filters, stat
 
     const handleImport = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/${tenant?.slug}/wifi/vouchers/import`, {
+        postImport(`/${tenant?.slug}/wifi/vouchers/import`, {
             forceFormData: true,
             onSuccess: () => {
                 setIsImportModalOpen(false);
-                reset('file', 'package_id', 'zone_id');
+                resetImport('file', 'package_id', 'zone_id');
+            }
+        });
+    };
+
+    const handleAddTicket = (e: React.FormEvent) => {
+        e.preventDefault();
+        postAdd(`/${tenant?.slug}/wifi/vouchers`, {
+            onSuccess: () => {
+                setIsAddModalOpen(false);
+                resetAdd();
             }
         });
     };
@@ -266,7 +284,7 @@ export default function VouchersIndex({ vouchers, packages, zones, filters, stat
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            {errors.package_id && <p className="text-xs text-destructive">{errors.package_id}</p>}
+                                            {importErrors.package_id && <p className="text-xs text-destructive">{importErrors.package_id}</p>}
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="file">Sélectionnez le fichier CSV / TXT</Label>
@@ -291,12 +309,101 @@ export default function VouchersIndex({ vouchers, packages, zones, filters, stat
                                                     onChange={(e) => setImportData('file', e.target.files?.[0] || null)}
                                                 />
                                             </div>
-                                            {errors.file && <p className="text-sm text-destructive font-medium flex items-center gap-1 mt-1"><AlertTriangle className="h-3 w-3" /> {errors.file}</p>}
+                                            {importErrors.file && <p className="text-sm text-destructive font-medium flex items-center gap-1 mt-1"><AlertTriangle className="h-3 w-3" /> {importErrors.file}</p>}
                                         </div>
                                     </div>
                                     <DialogFooter>
-                                        <Button type="submit" className="w-full" disabled={processing}>
-                                            {processing ? 'Chargement...' : 'Lancer l\'importation'}
+                                        <Button type="submit" className="w-full" disabled={importProcessing}>
+                                            {importProcessing ? 'Chargement...' : 'Lancer l\'importation'}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+
+                        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="gap-2 bg-primary hover:bg-primary/90">
+                                    <Plus className="h-4 w-4" />
+                                    Ajouter Ticket
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[500px]">
+                                <form onSubmit={handleAddTicket}>
+                                    <DialogHeader>
+                                        <DialogTitle>Ajouter un ticket</DialogTitle>
+                                        <DialogDescription>
+                                            Remplissez les informations pour créer un ticket individuel.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="username">Username</Label>
+                                                <Input
+                                                    id="username"
+                                                    value={addData.username}
+                                                    onChange={(e) => setAddData('username', e.target.value)}
+                                                    placeholder="Ex: user123"
+                                                />
+                                                {addErrors.username && <p className="text-xs text-destructive">{addErrors.username}</p>}
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="password">Password</Label>
+                                                <Input
+                                                    id="password"
+                                                    value={addData.password}
+                                                    onChange={(e) => setAddData('password', e.target.value)}
+                                                    placeholder="Ex: pass123"
+                                                />
+                                                {addErrors.password && <p className="text-xs text-destructive">{addErrors.password}</p>}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="zone">Zone / Routeur</Label>
+                                                <Select
+                                                    value={addData.zone_id.toString()}
+                                                    onValueChange={(value) => setAddData('zone_id', value)}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Sélectionnez" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {zones.map((zone) => (
+                                                            <SelectItem key={zone.id} value={zone.id.toString()}>
+                                                                {zone.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {addErrors.zone_id && <p className="text-xs text-destructive">{addErrors.zone_id}</p>}
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="package">Forfait</Label>
+                                                <Select
+                                                    value={addData.package_id.toString()}
+                                                    onValueChange={(value) => setAddData('package_id', value)}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Sélectionnez" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {packages.map((pkg) => (
+                                                            <SelectItem key={pkg.id} value={pkg.id.toString()}>
+                                                                {pkg.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {addErrors.package_id && <p className="text-xs text-destructive">{addErrors.package_id}</p>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit" className="w-full" disabled={addProcessing}>
+                                            {addProcessing ? 'Création...' : 'Créer le ticket'}
                                         </Button>
                                     </DialogFooter>
                                 </form>

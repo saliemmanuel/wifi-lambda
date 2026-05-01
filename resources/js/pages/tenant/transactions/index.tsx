@@ -28,7 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Eye, Search, Calendar as CalendarIcon, CheckCircle2, XCircle, Clock, ArrowUpDown } from 'lucide-react';
+import { Eye, Search, Calendar as CalendarIcon, CheckCircle2, XCircle, Clock, ArrowUpDown, RefreshCw } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
@@ -47,6 +47,8 @@ interface Transaction {
     payment_method: string | null;
     failure_reason: string | null;
     meta: any;
+    reseller_net_amount: number;
+    platform_commission_fcfa: number;
 }
 
 interface TransactionDetail extends Transaction {
@@ -114,6 +116,31 @@ export default function TransactionsIndex({ transactions, filters }: Props) {
             setSelectedZone(data.zone);
         } catch (error) {
             console.error('Error fetching transaction details:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSync = async (transactionId: number) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`/${tenant?.slug}/transactions/${transactionId}/sync`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content,
+                },
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Reload page to get fresh data
+                router.reload();
+            } else {
+                alert(data.message || 'Erreur lors de la synchronisation');
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            alert('Erreur technique lors de la synchronisation');
         } finally {
             setIsLoading(false);
         }
@@ -299,7 +326,8 @@ export default function TransactionsIndex({ transactions, filters }: Props) {
                                 <TableHead>Type</TableHead>
                                 <TableHead>Référence</TableHead>
                                 <TableHead>Téléphone</TableHead>
-                                <TableHead className="text-right">Montant</TableHead>
+                                <TableHead className="text-right">Montant Total</TableHead>
+                                <TableHead className="text-right">Mon Gain</TableHead>
                                 <TableHead>Statut</TableHead>
                                 <TableHead className="text-right">Action</TableHead>
                             </TableRow>
@@ -326,27 +354,46 @@ export default function TransactionsIndex({ transactions, filters }: Props) {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="font-mono text-xs">
-                                            {transaction.reference || transaction.campay_transaction_id || '-'}
+                                            {transaction.campay_reference || transaction.campay_transaction_id || '-'}
                                         </TableCell>
                                         <TableCell>
                                             {transaction.phone_number || '-'}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <span className="font-bold">
-                                                {transaction.amount_fcfa.toLocaleString()} <span className="text-[10px] text-muted-foreground uppercase">FCFA</span>
+                                            <span className="font-medium text-muted-foreground line-through decoration-red-500/30">
+                                                {transaction.amount_fcfa.toLocaleString()}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <span className="font-bold text-emerald-600">
+                                                {transaction.reseller_net_amount.toLocaleString()} <span className="text-[10px] uppercase">FCFA</span>
                                             </span>
                                         </TableCell>
                                         <TableCell>
                                             {getStatusBadge(transaction.status)}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => handleViewDetails(transaction)}
-                                            >
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
+                                            <div className="flex justify-end gap-2">
+                                                {(transaction.status === 'pending' || transaction.status === 'processing') && (
+                                                    <Button
+                                                        size="icon"
+                                                        variant="outline"
+                                                        className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200"
+                                                        onClick={() => handleSync(transaction.id)}
+                                                        disabled={isLoading}
+                                                    >
+                                                        <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8"
+                                                    onClick={() => handleViewDetails(transaction)}
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -404,7 +451,7 @@ export default function TransactionsIndex({ transactions, filters }: Props) {
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Référence Opération</Label>
-                                        <p className="text-sm font-mono break-all">{selectedTransaction.reference || '-'}</p>
+                                        <p className="text-sm font-mono break-all">{selectedTransaction.campay_reference || '-'}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Référence Fournisseur</Label>
@@ -449,16 +496,30 @@ export default function TransactionsIndex({ transactions, filters }: Props) {
                                 </div>
                                 <div className="space-y-2 bg-muted/30 p-4 rounded-lg">
                                     <div className="flex justify-between items-center text-xs">
-                                        <span className="text-muted-foreground">Frais (15%)</span>
-                                        <span className="font-medium">{(selectedTransaction.amount_fcfa * 0.15).toFixed(0)} FCFA</span>
+                                        <span className="text-muted-foreground">Prix Payé par Client</span>
+                                        <span className="font-medium">{selectedTransaction.amount_fcfa.toLocaleString()} FCFA</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs">
-                                        <span className="text-muted-foreground">Net</span>
-                                        <span className="font-medium">{(selectedTransaction.amount_fcfa * 0.85).toFixed(0)} FCFA</span>
+                                        <span className="text-muted-foreground">
+                                            Commission Platforme ({selectedTransaction.platform_commission_fcfa > 0 ? '10%' : 'Plan Business'})
+                                        </span>
+                                        <span className="font-medium text-red-500">
+                                            -{selectedTransaction.platform_commission_fcfa.toLocaleString()} FCFA
+                                        </span>
                                     </div>
+                                    {selectedTransaction.platform_commission_fcfa == 0 && (
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-muted-foreground">Frais Aggrégateur (3%)</span>
+                                            <span className="font-medium text-red-500">
+                                                -{Math.round(selectedTransaction.amount_fcfa * 0.03).toLocaleString()} FCFA
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center pt-2 border-t mt-2">
-                                        <span className="font-bold text-sm">Total</span>
-                                        <span className="font-black text-lg">{selectedTransaction.amount_fcfa.toLocaleString()} FCFA</span>
+                                        <span className="font-bold text-sm">Mon Gain Net</span>
+                                        <span className="font-black text-lg text-emerald-600">
+                                            {selectedTransaction.reseller_net_amount.toLocaleString()} FCFA
+                                        </span>
                                     </div>
                                 </div>
                             </div>

@@ -34,6 +34,8 @@ interface RevenueIndexProps {
     currentMonthTotal: number;
     revenueByPlan: DistributionData[];
     revenueByTenant: DistributionData[];
+    gross30DaysVolume?: number;
+    total30DaysGain?: number;
 }
 
 const COLORS = ['Primary', 'Emerald', 'Amber', 'Rose', 'Indigo', 'Cyan'];
@@ -51,7 +53,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Analyses Revenue', href: '/admin/revenue' },
 ];
 
-export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueByPlan, revenueByTenant }: RevenueIndexProps) {
+export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueByPlan, revenueByTenant, gross30DaysVolume, total30DaysGain }: RevenueIndexProps) {
     // Explicitly cast to number to avoid string concatenation issues (like "01510")
     const totalAllTime = dailyRevenue.reduce((acc, curr) => acc + Number(curr.total || 0), 0);
 
@@ -77,28 +79,28 @@ export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueB
                     <Card className="shadow-sm border-border/50 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-blue-500/20 transition-colors" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Revenu Total (30j)</CardTitle>
+                            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Mes Gains (30j)</CardTitle>
                             <Target className="h-4 w-4 text-blue-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold tabular-nums text-foreground">
-                                {totalAllTime.toLocaleString()} <span className="text-xs font-medium text-muted-foreground">FCFA</span>
+                                {(total30DaysGain || totalAllTime).toLocaleString()} <span className="text-xs font-medium text-muted-foreground">FCFA</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Cumul des 30 derniers jours</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">Volume global : {(gross30DaysVolume || 0).toLocaleString()} FCFA</p>
                         </CardContent>
                     </Card>
 
                     <Card className="shadow-sm border-border/50 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ce mois</CardTitle>
+                            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Mes Gains (Ce mois)</CardTitle>
                             <TrendingUp className="h-4 w-4 text-emerald-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold tabular-nums text-foreground">
                                 {currentMonthTotal.toLocaleString()} <span className="text-xs font-medium text-muted-foreground">FCFA</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Mois en cours ({new Date().toLocaleDateString('fr-FR', { month: 'long' })})</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">Après déduction de 3% de frais</p>
                         </CardContent>
                     </Card>
 
@@ -126,8 +128,8 @@ export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueB
                         <CardHeader className="pb-0">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <CardTitle className="text-lg font-bold">Évolution du Chiffre d'Affaires</CardTitle>
-                                    <CardDescription>Performance réelle sur 30 jours</CardDescription>
+                                    <CardTitle className="text-lg font-bold">Évolution de vos Gains</CardTitle>
+                                    <CardDescription>Profit net plateforme sur 30 jours</CardDescription>
                                 </div>
                                 <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest border border-emerald-500/20">
                                     <div className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -171,7 +173,7 @@ export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueB
                                         }}
                                         itemStyle={{ fontSize: '13px', fontWeight: 800, color: '#1e40af' }}
                                         labelStyle={{ fontSize: '11px', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}
-                                        formatter={(value: any) => [`${value?.toLocaleString() || 0} FCFA`, 'Chiffre d\'Affaires']}
+                                        formatter={(value: any) => [`${value?.toLocaleString() || 0} FCFA`, 'Gain Net']}
                                     />
                                     <Area
                                         type="monotone"
@@ -191,8 +193,8 @@ export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueB
 
                     <Card className="shadow-sm border-border/50 overflow-hidden">
                         <CardHeader>
-                            <CardTitle className="text-lg font-bold">Distribution par Plan</CardTitle>
-                            <CardDescription>Répartition des revenus</CardDescription>
+                            <CardTitle className="text-lg font-bold">Gains par Plan</CardTitle>
+                            <CardDescription>Répartition de vos profits</CardDescription>
                         </CardHeader>
                         <CardContent className="h-[350px] flex flex-col items-center justify-center relative">
                             <ResponsiveContainer width="100%" height="85%">
@@ -227,9 +229,9 @@ export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueB
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-6">
                                 <span className="text-2xl font-black tracking-tighter">
-                                    {totalAllTime > 1000 ? (totalAllTime / 1000).toFixed(1) + 'k' : totalAllTime}
+                                    {(total30DaysGain || totalAllTime) > 1000 ? ((total30DaysGain || totalAllTime) / 1000).toFixed(1) + 'k' : (total30DaysGain || totalAllTime)}
                                 </span>
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-50 tracking-widest">Total FCFA</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-50 tracking-widest">Gain Total FCFA</span>
                             </div>
                             <div className="w-full mt-2 px-6">
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -252,8 +254,8 @@ export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueB
                     <Card className="shadow-sm border-border/50 bg-card overflow-hidden">
                         <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pb-4">
                             <div>
-                                <CardTitle className="text-lg font-bold">Top Zones de Revenu</CardTitle>
-                                <CardDescription>Classement des partenaires par chiffre d'affaires cumulé.</CardDescription>
+                                <CardTitle className="text-lg font-bold">Top Zones (Vos Gains)</CardTitle>
+                                <CardDescription>Classement des partenaires par profit généré pour vous.</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent className="h-[320px] pt-8 bg-zinc-50/30 dark:bg-zinc-950/20">
@@ -281,7 +283,7 @@ export default function RevenueIndex({ dailyRevenue, currentMonthTotal, revenueB
                                             borderRadius: '8px',
                                             boxShadow: '0 4px 12px rgb(0 0 0 / 0.1)'
                                         }}
-                                        formatter={(value: any) => [`${value?.toLocaleString() || 0} FCFA`, 'Performance']}
+                                        formatter={(value: any) => [`${value?.toLocaleString() || 0} FCFA`, 'Votre Gain']}
                                     />
                                     <Bar
                                         dataKey="total"

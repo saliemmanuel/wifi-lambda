@@ -18,7 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $user = auth()->user();
         
         // 1. Is Super Admin?
-        if (str_ends_with($user->email, '@wifi-lambda.com')) {
+        if (str_ends_with($user->email, '@zawifi.com')) {
             return redirect()->route('admin.dashboard');
         }
 
@@ -40,6 +40,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/tenants', [\App\Http\Controllers\Admin\TenantController::class, 'index'])->name('tenants.index');
         Route::patch('/tenants/{tenant}/toggle-status', [\App\Http\Controllers\Admin\TenantController::class, 'toggleStatus'])->name('tenants.toggle-status');
+        Route::post('/tenants/{tenant}/upgrade-business', [\App\Http\Controllers\Admin\TenantController::class, 'upgradeToBusiness'])->name('tenants.upgrade-business');
+        Route::post('/tenants/{tenant}/downgrade-free', [\App\Http\Controllers\Admin\TenantController::class, 'downgradeToFree'])->name('tenants.downgrade-free');
         
         Route::get('/plans', [\App\Http\Controllers\Admin\PlanController::class, 'index'])->name('plans.index');
         Route::put('/plans/{plan}', [\App\Http\Controllers\Admin\PlanController::class, 'update'])->name('plans.update');

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\MikrotikRouter;
-use App\Models\Tenant\WifiVoucher;
+use App\Models\Payment;
 use App\Services\TenantService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -31,9 +31,10 @@ class StatisticsController extends Controller
         $ticketMode = $request->input('ticket_mode', 'daily'); // 'daily' or 'monthly'
         $ticketMonth = $request->input('ticket_month', Carbon::now()->month); // Used if mode is daily
 
-        // 3. Get Available Years (from WifiVoucher purchased_at)
-        $years = WifiVoucher::whereNotNull('purchased_at')
-            ->selectRaw('YEAR(purchased_at) as year')
+        // 3. Get Available Years (from Payment created_at)
+        $years = Payment::where('tenant_id', $this->tenantService->getCurrentTenant()->id)
+            ->where('payment_type', 'ticket')
+            ->selectRaw('YEAR(created_at) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -55,55 +56,85 @@ class StatisticsController extends Controller
         };
 
         // --- Payment Stats (Revenue) ---
-        $paymentQuery = WifiVoucher::query(); 
-        $buildQuery($paymentQuery);
-        
+        $paymentsQuery = Payment::where('tenant_id', $this->tenantService->getCurrentTenant()->id)
+            ->where('payment_type', 'ticket')
+            ->whereIn('status', ['paid', 'completed', 'success'])
+            ->whereYear('created_at', $year);
+
+        if ($zoneId && $zoneId !== 'all') {
+            $paymentsQuery->where('meta->router_id', $zoneId);
+        }
+
         if ($paymentMode === 'daily') {
-            $paymentQuery->whereMonth('purchased_at', $paymentMonth);
-            $paymentStats = $paymentQuery->selectRaw('DAY(purchased_at) as label, SUM(purchase_amount_fcfa) as total')
-                ->groupBy('label')
-                ->orderBy('label')
-                ->get()
-                ->map(fn($item) => ['label' => (string)$item->label, 'value' => (float)$item->total]);
+            $paymentsQuery->whereMonth('created_at', $paymentMonth);
+        }
+
+        $payments = $paymentsQuery->get();
+
+        if ($paymentMode === 'daily') {
+            $paymentStats = $payments->groupBy(function($tx) {
+                return $tx->created_at->day;
+            })->map(function($dayPayments, $day) {
+                $dayNet = 0;
+                foreach ($dayPayments as $tx) {
+                    $resellerAmount = (int) $tx->reseller_amount_fcfa;
+                    if ($tx->platform_commission_fcfa == 0) {
+                        $aggregatorFee = (int) round($tx->amount_fcfa * 0.03);
+                        $dayNet += ($resellerAmount - $aggregatorFee);
+                    } else {
+                        $dayNet += $resellerAmount;
+                    }
+                }
+                return ['label' => (string)$day, 'value' => (float)$dayNet];
+            })->values()->sortBy('label');
         } else {
             // Monthly
-            $paymentStats = $paymentQuery->selectRaw('MONTH(purchased_at) as label, SUM(purchase_amount_fcfa) as total')
-                ->groupBy('label')
-                ->orderBy('label')
-                ->get()
-                ->map(fn($item) => ['label' => Carbon::create()->month($item->label)->locale('fr')->monthName, 'value' => (float)$item->total]);
+            $paymentStats = $payments->groupBy(function($tx) {
+                return $tx->created_at->month;
+            })->map(function($monthPayments, $month) {
+                $monthNet = 0;
+                foreach ($monthPayments as $tx) {
+                    $resellerAmount = (int) $tx->reseller_amount_fcfa;
+                    if ($tx->platform_commission_fcfa == 0) {
+                        $aggregatorFee = (int) round($tx->amount_fcfa * 0.03);
+                        $monthNet += ($resellerAmount - $aggregatorFee);
+                    } else {
+                        $monthNet += $resellerAmount;
+                    }
+                }
+                return ['label' => Carbon::create()->month($month)->locale('fr')->monthName, 'value' => (float)$monthNet];
+            })->values()->sortBy(function($item) {
+                return Carbon::parse($item['label'])->month;
+            });
         }
 
         // --- Ticket Stats (Count) ---
-        $ticketQuery = WifiVoucher::query();
-        $buildQuery($ticketQuery);
-
         if ($ticketMode === 'daily') {
-            $ticketQuery->whereMonth('purchased_at', $ticketMonth);
-            $ticketStats = $ticketQuery->selectRaw('DAY(purchased_at) as label, COUNT(*) as total')
-                ->groupBy('label')
-                ->orderBy('label')
-                ->get()
-                ->map(fn($item) => ['label' => (string)$item->label, 'value' => (int)$item->total]);
+            $ticketStats = $payments->whereBetween('created_at', [
+                Carbon::create($year, $ticketMonth, 1)->startOfMonth(),
+                Carbon::create($year, $ticketMonth, 1)->endOfMonth()
+            ])->groupBy(function($tx) {
+                return $tx->created_at->day;
+            })->map(function($dayPayments, $day) {
+                return ['label' => (string)$day, 'value' => $dayPayments->count()];
+            })->values()->sortBy('label');
         } else {
-             // Monthly
-            $ticketStats = $ticketQuery->selectRaw('MONTH(purchased_at) as label, COUNT(*) as total')
-                ->groupBy('label')
-                ->orderBy('label')
-                ->get()
-                ->map(fn($item) => ['label' => Carbon::create()->month($item->label)->locale('fr')->monthName, 'value' => (int)$item->total]);
+            // Monthly
+            $ticketStats = $payments->groupBy(function($tx) {
+                return $tx->created_at->month;
+            })->map(function($monthPayments, $month) {
+                return ['label' => Carbon::create()->month($month)->locale('fr')->monthName, 'value' => $monthPayments->count()];
+            })->values()->sortBy(function($item) {
+                return Carbon::parse($item['label'])->month;
+            });
         }
-
-
-        // Fill gaps for charts to look nice (Optional but good UX)
-        // ... (Skipping complex gap filling for brevity, can rely on frontend or add simple logic if requested)
 
         return Inertia::render('tenant/wifi/statistics/index', [
             'zones' => $zones,
             'years' => $years,
             'stats' => [
-                'payments' => $paymentStats,
-                'tickets' => $ticketStats,
+                'payments' => $paymentStats->values()->toArray(),
+                'tickets' => $ticketStats->values()->toArray(),
             ],
             'filters' => [
                 'zone_id' => $zoneId,

@@ -27,7 +27,7 @@ export default function Welcome({
                     <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                         <div className="flex items-center gap-2 font-bold text-xl">
                             <Wifi className="h-6 w-6 text-primary" />
-                            <span>WiFi Lambda</span>
+                            <span>ZAWIFI</span>
                         </div>
                         <nav className="flex items-center gap-4">
                             {auth.user ? (
@@ -230,7 +230,7 @@ export default function Welcome({
                 {/* Footer */}
                 <footer className="border-t py-8 mt-12 bg-muted/50">
                     <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center text-muted-foreground text-sm">
-                        <p>&copy; {new Date().getFullYear()} WiFi Lambda. Fait avec ❤️ au Cameroun 🇨🇲.</p>
+                        <p>&copy; {new Date().getFullYear()} ZAWIFI. Fait avec ❤️ au Cameroun 🇨🇲.</p>
                         <div className="flex gap-4 mt-4 sm:mt-0">
                             <Link href="#" className="hover:underline">Conditions</Link>
                             <Link href="#" className="hover:underline">Confidentialité</Link>

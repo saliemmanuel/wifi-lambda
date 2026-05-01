@@ -24,7 +24,8 @@ import {
     XCircle,
     ArrowUpRight,
     Info,
-    X
+    X,
+    RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
@@ -95,6 +96,27 @@ export default function WithdrawalsIndex({ methods, history, balance }: Props) {
                 resetWithdrawal();
             },
         });
+    };
+
+    const handleSyncWithdrawal = async (id: number) => {
+        try {
+            const response = await fetch(`/${tenant.slug}/withdrawals/${id}/check-status`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content,
+                },
+            });
+            const data = await response.json();
+            if (response.ok) {
+                // Reload page to get fresh data
+                window.location.reload();
+            } else {
+                alert(data.message || 'Erreur lors de la synchronisation');
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            alert('Erreur technique lors de la synchronisation');
+        }
     };
 
     const getStatusIcon = (status: string) => {
@@ -339,7 +361,7 @@ export default function WithdrawalsIndex({ methods, history, balance }: Props) {
                                         <Button
                                             type="submit"
                                             disabled={processingWithdrawal || !withdrawalData.amount || Number(withdrawalData.amount) > balance}
-                                            className="w-full gap-2"
+                                            className="w-full"
                                             size="lg"
                                         >
                                             {processingWithdrawal ? 'Initialisation...' : 'Initier le retrait maintenant'}
@@ -363,13 +385,25 @@ export default function WithdrawalsIndex({ methods, history, balance }: Props) {
                                 <Card key={item.id} className="shadow-none">
                                     <div className="p-4 flex flex-col gap-3">
                                         <div className="flex items-center justify-between">
-                                            <span className={cn(
-                                                "px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1.5",
-                                                getStatusColor(item.status)
-                                            )}>
-                                                {getStatusIcon(item.status)}
-                                                {item.status}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1.5",
+                                                    getStatusColor(item.status)
+                                                )}>
+                                                    {getStatusIcon(item.status)}
+                                                    {item.status}
+                                                </span>
+                                                {(item.status === 'processing' || item.status === 'pending') && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6 text-blue-600 hover:bg-blue-50"
+                                                        onClick={() => handleSyncWithdrawal(item.id)}
+                                                    >
+                                                        <RefreshCw className="h-3 w-3" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                             <span className="text-[10px] font-medium text-muted-foreground">
                                                 {new Date(item.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                                             </span>

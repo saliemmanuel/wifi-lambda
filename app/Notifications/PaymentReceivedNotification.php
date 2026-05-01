@@ -37,7 +37,7 @@ class PaymentReceivedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('Confirmation de Paiement - WiFi Lambda')
+                    ->subject('Confirmation de Paiement - ZAWIFI')
                     ->greeting('Bonjour ' . $notifiable->name . '!')
                     ->line('Nous avons bien reçu votre paiement de ' . number_format($this->payment->amount_fcfa) . ' FCFA.')
                     ->line('Votre abonnement a été activé avec succès.')

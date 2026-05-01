@@ -14,7 +14,7 @@ class PlatformAdminSeeder extends Seeder
     {
         // Create Platform Super Admin
         \App\Models\User::firstOrCreate(
-            ['email' => 'admin@wifi-lambda.com'],
+            ['email' => 'admin@zawifi.com'],
             [
                 'name' => 'Platform Super Admin',
                 'password' => \Illuminate\Support\Facades\Hash::make('password'),

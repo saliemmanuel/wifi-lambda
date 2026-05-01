@@ -17,7 +17,7 @@ class IsSuperAdmin
     {
         $user = $request->user();
 
-        if (!$user || !str_ends_with($user->email, '@wifi-lambda.com')) {
+        if (!$user || !str_ends_with($user->email, '@zawifi.com')) {
             // Abort with 403 Forbidden or redirect to home
             abort(403, 'Unauthorized action.');
         }

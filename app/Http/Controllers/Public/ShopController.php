@@ -97,9 +97,18 @@ class ShopController extends Controller
             return response()->json(['error' => 'Désolé, plus de tickets disponibles pour ce forfait.'], 400);
         }
 
-        //$amount = $package->price_fcfa;
-        $amount = 5; // TESTING: Hardcoded to 5 FCFA
+        $amount = $package->price_fcfa;
         $description = "Achat Ticket Wi-Fi: {$package->name}";
+
+        // Calculate Commission (10% if not Business plan)
+        $commission = 0;
+        $resellerAmount = $amount;
+        $tenantPlanSlug = $tenant->plan?->slug ?? 'free';
+        
+        if ($tenantPlanSlug !== 'business') {
+            $commission = (int) round($amount * 0.10);
+            $resellerAmount = $amount - $commission;
+        }
 
         try {
             $response = $this->campayService->collect([
@@ -117,6 +126,8 @@ class ShopController extends Controller
                     'payment_type' => 'ticket',
                     'ticket_id' => $voucher->id,
                     'amount_fcfa' => $amount,
+                    'platform_commission_fcfa' => $commission,
+                    'reseller_amount_fcfa' => $resellerAmount,
                     'status' => 'pending',
                     'campay_reference' => $response['reference'],
                     'campay_transaction_id' => ($response['external_reference'] ?? 'VOUCH_' . time()) . '_' . time(),
@@ -129,7 +140,8 @@ class ShopController extends Controller
                         'voucher_id' => $voucher->id,
                         'type' => 'voucher_sale',
                         'description' => $description,
-                        'campay_response' => $response
+                        'campay_response' => $response,
+                        'plan_at_purchase' => $tenantPlanSlug
                     ]
                 ]);
 

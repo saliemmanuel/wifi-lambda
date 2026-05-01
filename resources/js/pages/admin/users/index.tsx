@@ -68,12 +68,12 @@ export default function UserIndex({ users }: UserIndexProps) {
                                         <td className="px-6 py-4">
                                             <span className={cn(
                                                 "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border",
-                                                user.email.endsWith('@wifi-lambda.com')
+                                                user.email.endsWith('@zawifi.com')
                                                     ? "bg-indigo-50 text-indigo-600 border-indigo-100"
                                                     : "bg-zinc-50 text-zinc-600 border-zinc-100"
                                             )}>
-                                                {user.email.endsWith('@wifi-lambda.com') && <Shield className="size-3" />}
-                                                {user.email.endsWith('@wifi-lambda.com') ? 'Super Admin' : 'Utilisateur'}
+                                                {user.email.endsWith('@zawifi.com') && <Shield className="size-3" />}
+                                                {user.email.endsWith('@zawifi.com') ? 'Super Admin' : 'Utilisateur'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-[10px] font-bold text-muted-foreground">

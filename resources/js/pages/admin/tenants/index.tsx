@@ -27,7 +27,7 @@ interface Tenant {
     slug: string;
     email: string;
     status: string;
-    plan?: { name: string };
+    plan?: { name: string, slug: string };
     active_subscription?: { plan: { name: string } };
     created_at: string;
 }
@@ -72,6 +72,18 @@ export default function TenantsIndex({ tenants, filters }: TenantsIndexProps) {
     const toggleStatus = (tenant: Tenant) => {
         if (confirm(`Voulez-vous vraiment ${tenant.status === 'active' ? 'suspendre' : 'activer'} cette zone ?`)) {
             router.patch(`/admin/tenants/${tenant.slug}/toggle-status`);
+        }
+    };
+
+    const upgradeToBusiness = (tenant: Tenant) => {
+        if (confirm(`Voulez-vous vraiment passer ${tenant.name} au plan Business ? Cela désactivera les commissions de 10% pour ce tenant.`)) {
+            router.post(`/admin/tenants/${tenant.slug}/upgrade-business`);
+        }
+    };
+
+    const downgradeToFree = (tenant: Tenant) => {
+        if (confirm(`Voulez-vous vraiment remettre ${tenant.name} au plan Gratuit ? Les commissions de 10% seront à nouveau activées.`)) {
+            router.post(`/admin/tenants/${tenant.slug}/downgrade-free`);
         }
     };
 
@@ -157,6 +169,30 @@ export default function TenantsIndex({ tenants, filters }: TenantsIndexProps) {
                                     </a>
                                 </Button>
                             </div>
+                            
+                            {tenant.plan?.slug === 'business' ? (
+                                <div className="mt-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full h-10 rounded-xl font-black uppercase text-[9px] tracking-widest border-primary/20 text-primary hover:bg-primary hover:text-white transition-all"
+                                        onClick={() => downgradeToFree(tenant)}
+                                    >
+                                        Remettre au Plan Gratuit
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="mt-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full h-10 rounded-xl font-black uppercase text-[9px] tracking-widest border-primary/20 text-primary hover:bg-primary hover:text-white transition-all"
+                                        onClick={() => upgradeToBusiness(tenant)}
+                                    >
+                                        Passer au Plan Business
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

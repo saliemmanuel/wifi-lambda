@@ -114,7 +114,7 @@ export function AppSidebar() {
 
     // Add Admin Panel link for super admins if they are in tenant view
     // (Assuming super admins can be identified by role or email for now)
-    const isSuperAdmin = auth.user?.email.endsWith('@wifi-lambda.com');
+    const isSuperAdmin = auth.user?.email.endsWith('@zawifi.com');
 
     const footerNavItems: NavItem[] = [
         ...(isSuperAdmin && !isAdminPath ? [{

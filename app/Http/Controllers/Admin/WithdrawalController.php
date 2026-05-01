@@ -14,13 +14,21 @@ class WithdrawalController extends Controller
 {
     public function index()
     {
-        // Platform Revenue is in EUR but typically withdrawals might be in FCFA if using local providers
-        // For simplicity, let's assume we track total completed EUR revenue
-        $totalRevenueEur = Payment::where('status', 'completed')->sum('amount_eur');
-        $totalWithdrawnFcfa = PlatformWithdrawal::where('status', 'completed')->sum('amount_fcfa');
+        $grossTotalVolume = Payment::where('status', 'completed')->sum('amount_fcfa');
+        $payments = Payment::where('status', 'completed')->get();
+        $totalPlatformNetRevenue = 0;
+
+        foreach ($payments as $payment) {
+            $commission = (int) $payment->platform_commission_fcfa;
+            if ($commission > 0) {
+                // Free Plan: Admin pays fee from commission
+                $aggregatorFee = (int) round($payment->amount_fcfa * 0.03);
+                $totalPlatformNetRevenue += ($commission - $aggregatorFee);
+            }
+        }
         
-        // Estimated balance in FCFA (assuming 1 EUR = 655 FCFA for simplicity in display)
-        $availableBalanceFcfa = ($totalRevenueEur * 655) - $totalWithdrawnFcfa;
+        $totalWithdrawnFcfa = PlatformWithdrawal::where('status', 'completed')->sum('amount_fcfa');
+        $availableBalanceFcfa = $totalPlatformNetRevenue - $totalWithdrawnFcfa;
 
         $withdrawals = PlatformWithdrawal::with('method')->latest()->paginate(10);
         $methods = PlatformWithdrawalMethod::all();
@@ -29,9 +37,10 @@ class WithdrawalController extends Controller
             'withdrawals' => $withdrawals,
             'methods' => $methods,
             'stats' => [
-                'totalRevenueEur' => $totalRevenueEur,
+                'grossTotalVolume' => $grossTotalVolume,
                 'availableBalanceFcfa' => $availableBalanceFcfa,
                 'totalWithdrawnFcfa' => $totalWithdrawnFcfa,
+                'totalPlatformNetRevenue' => $totalPlatformNetRevenue,
             ]
         ]);
     }

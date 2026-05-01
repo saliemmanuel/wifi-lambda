@@ -42,6 +42,7 @@ class TenantService
                 'database_name' => $dbName,
                 'status' => 'active',
                 'plan_id' => \App\Models\Plan::where('slug', 'free')->first()?->id ?? \App\Models\Plan::first()?->id ?? null,
+                'onboarding_completed_at' => now(),
             ]);
 
             \App\Models\Subscription::create([

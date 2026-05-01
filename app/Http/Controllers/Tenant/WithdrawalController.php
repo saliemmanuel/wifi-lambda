@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\Withdrawal;
 use App\Models\Tenant\WithdrawalMethod;
-use App\Models\Tenant\WifiVoucher;
+use App\Models\Payment;
 use App\Services\CampayService;
 use App\Services\TenantService;
 use Illuminate\Http\Request;
@@ -29,13 +29,28 @@ class WithdrawalController extends Controller
             ->limit(10)
             ->get();
 
-        // Calculate current balance (voucher sales - withdrawals)
-        $totalSales = WifiVoucher::whereNotNull('purchased_at')
-            ->sum('purchase_amount_fcfa');
+        // Calculate current balance (reseller net profit - withdrawals)
+        $payments = Payment::where('tenant_id', $tenant->id)
+            ->where('payment_type', 'ticket')
+            ->whereIn('status', ['paid', 'completed', 'success'])
+            ->get();
+            
+        $totalNetSales = 0;
+        foreach ($payments as $payment) {
+            $resellerAmount = (int) $payment->reseller_amount_fcfa;
+            if ($payment->platform_commission_fcfa == 0) {
+                // Business Plan: Reseller pays 3% fee
+                $aggregatorFee = (int) round($payment->amount_fcfa * 0.03);
+                $totalNetSales += ($resellerAmount - $aggregatorFee);
+            } else {
+                // Free Plan: Admin pays fee, Reseller gets full reseller_amount
+                $totalNetSales += $resellerAmount;
+            }
+        }
             
         $totalWithdrawn = Withdrawal::where('status', 'completed')->sum('amount');
         
-        $balance = $totalSales - $totalWithdrawn;
+        $balance = $totalNetSales - $totalWithdrawn;
 
         return Inertia::render('tenant/withdrawals/index', [
             'methods' => $methods,
@@ -65,7 +80,7 @@ class WithdrawalController extends Controller
         return back()->with('success', 'Numéro de retrait ajouté.');
     }
 
-    public function deleteMethod($id)
+    public function deleteMethod($tenant_slug, $id)
     {
         $method = WithdrawalMethod::findOrFail($id);
         $method->delete();
@@ -84,16 +99,32 @@ class WithdrawalController extends Controller
         $method = WithdrawalMethod::findOrFail($request->method_id);
 
         // Check balance again
-        $totalSales = WifiVoucher::whereNotNull('purchased_at')
-            ->sum('purchase_amount_fcfa');
+        $payments = Payment::where('tenant_id', $tenant->id)
+            ->where('payment_type', 'ticket')
+            ->whereIn('status', ['paid', 'completed', 'success'])
+            ->get();
+            
+        $totalNetSales = 0;
+        foreach ($payments as $payment) {
+            $resellerAmount = (int) $payment->reseller_amount_fcfa;
+            if ($payment->platform_commission_fcfa == 0) {
+                // Business Plan: Reseller pays 3% fee
+                $aggregatorFee = (int) round($payment->amount_fcfa * 0.03);
+                $totalNetSales += ($resellerAmount - $aggregatorFee);
+            } else {
+                // Free Plan: Admin pays fee, Reseller gets full reseller_amount
+                $totalNetSales += $resellerAmount;
+            }
+        }
         $totalWithdrawn = Withdrawal::where('status', 'completed')->sum('amount');
-        $balance = $totalSales - $totalWithdrawn;
+        $balance = $totalNetSales - $totalWithdrawn;
 
         if ($request->amount > $balance) {
             return back()->withErrors(['amount' => 'Solde insuffisant.']);
         }
 
-        $reference = 'WDR-' . strtoupper(Str::random(10));
+        $ref = strtoupper(Str::random(10));
+        $reference = 'WDR_' . $tenant->id . '_' . $ref;
 
         $withdrawal = Withdrawal::create([
             'method_id' => $method->id,
@@ -123,5 +154,40 @@ class WithdrawalController extends Controller
             ]);
             return back()->withErrors(['api' => 'Impossible de contacter le service de paiement.']);
         }
+    }
+
+    public function checkStatus($tenant_slug, $id)
+    {
+        $withdrawal = Withdrawal::findOrFail($id);
+
+        if ($withdrawal->status !== 'processing' && $withdrawal->status !== 'pending') {
+            return response()->json(['message' => 'Ce retrait a déjà un statut final.'], 400);
+        }
+
+        if (!$withdrawal->external_reference) {
+            return response()->json(['message' => 'Référence externe manquante.'], 400);
+        }
+
+        $statusResp = $this->campayService->checkTransactionStatus($withdrawal->external_reference);
+
+        if (!$statusResp) {
+            return response()->json(['message' => 'Impossible de contacter le service de paiement.'], 500);
+        }
+
+        if ($statusResp['status'] === 'SUCCESSFUL') {
+            $withdrawal->update([
+                'status' => 'completed',
+                'processed_at' => now(),
+            ]);
+            return response()->json(['message' => 'Retrait confirmé avec succès !', 'status' => 'completed']);
+        } elseif (in_array($statusResp['status'], ['FAILED', 'CANCELLED'])) {
+            $withdrawal->update([
+                'status' => 'failed',
+                'error_message' => $statusResp['message'] ?? 'Échec du retrait chez l\'opérateur.',
+            ]);
+            return response()->json(['message' => 'Le retrait a échoué ou a été annulé.', 'status' => 'failed']);
+        }
+
+        return response()->json(['message' => 'Le retrait est toujours en cours de traitement.', 'status' => 'processing']);
     }
 }

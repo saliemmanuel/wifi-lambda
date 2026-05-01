@@ -33,6 +33,8 @@ interface AdminDashboardProps {
         totalTenants: number;
         activeSubscriptions: number;
         totalRevenue: number;
+        platformRevenue: number;
+        resellerRevenue: number;
         newTenantsThisMonth: number;
     };
     recentTenants: any[];
@@ -47,9 +49,10 @@ interface AdminDashboardProps {
         }[];
     };
     recentTransactions?: any[];
+    recentWithdrawals?: any[];
 }
 
-export default function AdminDashboard({ stats, recentTenants, charts, recentTransactions }: AdminDashboardProps) {
+export default function AdminDashboard({ stats, recentTenants, charts, recentTransactions, recentWithdrawals }: AdminDashboardProps) {
     // Transform chart data
     const revenueLabels = charts?.revenue?.labels || [];
     const revenueDataPoints = charts?.revenue?.data || [];
@@ -83,27 +86,26 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                         <div className="text-3xl font-black tracking-tight text-foreground">{stats.activeSubscriptions}</div>
                         <p className="text-xs font-bold text-muted-foreground">Zones opérationnelles</p>
                     </div>
-
                     <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Revenu Global</span>
+                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Mon Revenu Net</span>
                             <div className="p-2 bg-amber-50 dark:bg-amber-500/10 rounded-xl">
                                 <TrendingUp className="h-5 w-5 text-amber-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight text-foreground">{(stats.totalRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span></div>
-                        <p className="text-xs font-bold text-muted-foreground">Depuis le lancement</p>
+                        <div className="text-3xl font-black tracking-tight text-foreground">{(stats.platformRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span></div>
+                        <p className="text-xs font-bold text-muted-foreground">Après déduction de 3% de frais</p>
                     </div>
 
                     <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Santé Système</span>
+                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Revenu des Zones</span>
                             <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
-                                <Users className="h-5 w-5 text-indigo-600" />
+                                <TrendingUp className="h-5 w-5 text-indigo-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight text-foreground">99.9%</div>
-                        <p className="text-xs font-bold text-muted-foreground text-emerald-500">Service opérationnel</p>
+                        <div className="text-3xl font-black tracking-tight text-foreground">{(stats.resellerRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span></div>
+                        <p className="text-xs font-bold text-muted-foreground">Somme totale reversée aux zones</p>
                     </div>
                 </div>
 
@@ -135,7 +137,7 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                     <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                                     <Tooltip
                                         contentStyle={{ borderRadius: 'var(--radius)', border: 'none', backgroundColor: 'hsl(var(--card))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                        formatter={(value: any) => [`${value.toLocaleString()} FCFA`, 'Revenu']}
+                                        formatter={(value: any) => [`${value.toLocaleString()} FCFA`, 'Commissions']}
                                         labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                                     />
                                     <Area
@@ -221,7 +223,7 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                     <TableRow className="hover:bg-transparent border-b border-border/50">
                                         <TableHead className="w-[100px] text-xs font-bold text-muted-foreground uppercase">Réf.</TableHead>
                                         <TableHead className="text-xs font-bold text-muted-foreground uppercase">Zone / Tenant</TableHead>
-                                        <TableHead className="text-xs font-bold text-muted-foreground uppercase">Montant</TableHead>
+                                        <TableHead className="text-xs font-bold text-muted-foreground uppercase">Mon Gain</TableHead>
                                         <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase">Statut</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -242,7 +244,7 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                                         <span className="text-[9px] text-muted-foreground uppercase">{tx.method || 'Carte'}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-xs font-bold">{tx.amount_fcfa} FCFA</TableCell>
+                                                <TableCell className="text-xs font-bold">{tx.platform_net_amount} FCFA</TableCell>
                                                 <TableCell className="text-right">
                                                     <Badge variant="outline" className={cn(
                                                         "text-[9px] h-5 px-2 uppercase tracking-widest border-0",
@@ -258,6 +260,67 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
                                 </TableBody>
                             </Table>
                         </div>
+                    </div>
+                </div>
+
+                {/* Section: Recent Withdrawals */}
+                <div className="relative min-h-[300px] flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm p-6 mt-0">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-black uppercase tracking-tight italic text-foreground">Derniers Retraits des Zones</h3>
+                        <div className="flex gap-4">
+                            <span className="text-xs font-bold text-muted-foreground uppercase">Volume Sortant</span>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent border-b border-border/50">
+                                    <TableHead className="text-xs font-bold text-muted-foreground uppercase">Date</TableHead>
+                                    <TableHead className="text-xs font-bold text-muted-foreground uppercase">Zone / Tenant</TableHead>
+                                    <TableHead className="text-xs font-bold text-muted-foreground uppercase">Montant</TableHead>
+                                    <TableHead className="text-xs font-bold text-muted-foreground uppercase">Méthode</TableHead>
+                                    <TableHead className="text-right text-xs font-bold text-muted-foreground uppercase">Statut</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {(!recentWithdrawals || recentWithdrawals.length === 0) ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center text-xs font-medium text-muted-foreground italic">
+                                            Aucun retrait récent.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    recentWithdrawals.map((w) => (
+                                        <TableRow key={w.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 border-b border-border/50 last:border-0">
+                                            <TableCell className="text-xs text-muted-foreground font-medium">
+                                                {new Date(w.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-xs font-black uppercase italic">{w.tenant_name}</span>
+                                            </TableCell>
+                                            <TableCell className="text-xs font-bold">{w.amount.toLocaleString()} FCFA</TableCell>
+                                            <TableCell className="text-xs font-medium">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] uppercase">{w.method?.name || 'Mobile Money'}</span>
+                                                    <span className="text-[9px] text-muted-foreground font-mono">{w.method?.phone_number}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Badge variant="outline" className={cn(
+                                                    "text-[9px] h-5 px-2 uppercase tracking-widest border-0",
+                                                    w.status === 'completed' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" :
+                                                        w.status === 'processing' ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600" :
+                                                            w.status === 'pending' ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600" : "bg-red-50 dark:bg-red-500/10 text-red-600"
+                                                )}>
+                                                    {w.status === 'completed' ? 'Terminé' : w.status === 'processing' ? 'En cours' : w.status}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             </div>
