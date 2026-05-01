@@ -159,7 +159,7 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                 <CardContent className="p-6 pt-0 flex-1">
                                     <div className="flex items-baseline gap-1 mb-6">
                                         <span className="text-3xl font-bold tracking-tight text-foreground">{plan.price_fcfa.toLocaleString()}</span>
-                                        <span className="text-sm font-medium text-muted-foreground uppercase">FCFA/Ans</span>
+                                        <span className="text-sm font-medium text-muted-foreground uppercase">FCFA / {plan.price_fcfa === 0 ? 'Mois' : 'An'}</span>
                                     </div>
 
                                     <ul className="space-y-3">
@@ -167,10 +167,18 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                             <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
                                             <span className="text-sm">
                                                 {plan.commission_rate > 0
-                                                    ? `Commission de ${plan.commission_rate}%`
-                                                    : "0% de commission"}
+                                                    ? <><span className="font-bold">Commission de {plan.commission_rate}%</span> prélevée par la plateforme.</>
+                                                    : <><span className="font-bold">0% de commission plateforme</span> (vous gardez tout).</>}
                                             </span>
                                         </li>
+                                        {plan.slug === 'business' && (
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
+                                                <span className="text-sm">
+                                                    Frais techniques agrégateur de <span className="font-bold">3%</span> seulement.
+                                                </span>
+                                            </li>
+                                        )}
                                         <li className="flex items-start gap-3">
                                             <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
                                             <span className="text-sm">Ventes & Tickets illimités</span>
@@ -179,11 +187,15 @@ export default function BillingIndex({ tenant, plans }: Props) {
                                             <>
                                                 <li className="flex items-start gap-3">
                                                     <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
-                                                    <span className="text-sm">Dashboard Marque Blanche</span>
+                                                    <span className="text-sm">Dashboard en <span className="font-bold">Marque Blanche</span></span>
                                                 </li>
                                                 <li className="flex items-start gap-3">
                                                     <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
-                                                    <span className="text-sm">Accès complet à l'API</span>
+                                                    <span className="text-sm">Accès complet à l'API & Webhooks</span>
+                                                </li>
+                                                <li className="flex items-start gap-3">
+                                                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary" />
+                                                    <span className="text-sm text-emerald-600 font-bold">Support Prioritaire 24h/24</span>
                                                 </li>
                                             </>
                                         )}

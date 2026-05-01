@@ -157,27 +157,27 @@ export default function Welcome({
                                         <CardTitle className="text-xl">Gratuit</CardTitle>
                                         <CardDescription>Pour démarrer sans engagement.</CardDescription>
                                         <div className="mt-4">
-                                            <span className="text-4xl font-bold">0 FCFA</span>
-                                            <span className="text-muted-foreground"> / mois</span>
+                                            <span className="text-4xl font-bold uppercase tracking-tighter">0 FCFA</span>
+                                            <span className="text-muted-foreground text-sm"> / mois</span>
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex-1 flex flex-col">
                                         <ul className="space-y-3 text-sm flex-1 mb-6">
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-primary" />
-                                                <span className="font-medium">Commission 10% / transaction</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span>Commission de <span className="font-bold text-foreground">10%</span> prélevée sur chaque vente.</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                                                <span>Utilisateurs illimités</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span>Démarrage immédiat sans aucun frais fixe.</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                                                <span>Paiement à l'usage</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span>Accès complet aux outils de gestion WiFi.</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                                                <span>Support par email</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span>Support standard par ticket.</span>
                                             </li>
                                         </ul>
                                         <Button className="w-full" variant="outline">Commencer Gratuitement</Button>
@@ -195,27 +195,27 @@ export default function Welcome({
                                         <CardTitle className="text-xl">Business</CardTitle>
                                         <CardDescription className="text-zinc-400">Pour une croissance accélérée.</CardDescription>
                                         <div className="mt-4">
-                                            <span className="text-4xl font-bold">52.000</span>
-                                            <span className="text-zinc-400 text-sm"> FCFA/mois</span>
+                                            <span className="text-4xl font-bold uppercase tracking-tighter">10.000</span>
+                                            <span className="text-zinc-400 text-sm"> FCFA / mois</span>
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex-1 flex flex-col">
                                         <ul className="space-y-3 text-sm flex-1 mb-6">
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-primary" />
-                                                <span className="font-bold">0% commission</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span className="font-bold text-white">0% de commission plateforme.</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-primary" />
-                                                <span>Tickets illimités</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span>Vous gardez <span className="font-bold text-white">100% de vos gains nets</span> (hors frais techniques 3%).</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-primary" />
-                                                <span>Agents illimités</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span>Dashboard personnalisable (Marque Blanche).</span>
                                             </li>
-                                            <li className="flex items-center gap-2">
-                                                <CheckCircle2 className="h-4 w-4 text-primary" />
-                                                <span>Marque blanche & API</span>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                                                <span>Support prioritaire 24/7.</span>
                                             </li>
                                         </ul>
                                         <Button className="w-full bg-white text-black hover:bg-zinc-200">Choisir Business</Button>
