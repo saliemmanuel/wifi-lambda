@@ -59,4 +59,4 @@ COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
 
 ENTRYPOINT ["docker-entrypoint"]
-CMD ["frankenphp", "run-server", "--config", "/etc/caddy/Caddyfile"]
+CMD ["frankenphp", "php-server", "--config", "/etc/caddy/Caddyfile"]
