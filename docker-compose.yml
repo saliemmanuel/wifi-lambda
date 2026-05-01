@@ -1,54 +1,49 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: wifi_lambda_app
-    restart: unless-stopped
-    environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
-      - DB_HOST=db
-      - DB_PORT=3306
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    volumes:
-      - .env:/app/.env
-      - storage_data:/app/storage
-    ports:
-      - "8000:80"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+    app:
+        build:
+            context: .
+            dockerfile: docker/production/Dockerfile
+        image: wifi-lambda:latest
+        restart: unless-stopped
+        ports:
+            - "${APP_PORT:-8080}:80"
+        environment:
+            APP_ENV: production
+            APP_DEBUG: 'false'
+            DB_HOST: db
+            REDIS_HOST: redis
+        env_file: .env
+        depends_on:
+            - db
+            - redis
+        networks:
+            - app-network
 
-  db:
-    image: mysql:8.0
-    container_name: wifi_lambda_db
-    restart: unless-stopped
-    environment:
-      - MYSQL_DATABASE=${DB_DATABASE:-wifi_lambda}
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_USER=${DB_USERNAME:-laravel}
-    volumes:
-      - db_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
+    db:
+        image: mysql:8.0
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+        volumes:
+            - db-data:/var/lib/mysql
+        networks:
+            - app-network
 
-  redis:
-    image: redis:alpine
-    container_name: wifi_lambda_redis
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
+    redis:
+        image: redis:alpine
+        restart: unless-stopped
+        volumes:
+            - redis-data:/data
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
 
 volumes:
-  storage_data:
-  db_data:
-  redis_data:
+    db-data:
+    redis-data:
