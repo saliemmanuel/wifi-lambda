@@ -29,10 +29,16 @@ class WithdrawalController extends Controller
             ->limit(10)
             ->get();
 
-        // TEMPORARY TEST: Disable calculation to diagnose 502
-        $totalNetSales = 0;
-        $totalWithdrawn = 0;
-        $balance = 0;
+        // Calculate current balance efficiently
+        $totalNetSales = Payment::where('tenant_id', $tenant->id)
+            ->where('payment_type', 'ticket')
+            ->whereIn('status', ['paid', 'completed', 'success'])
+            ->selectRaw('SUM(CASE WHEN platform_commission_fcfa = 0 THEN reseller_amount_fcfa - ROUND(amount_fcfa * 0.03) ELSE reseller_amount_fcfa END) as net_sales')
+            ->value('net_sales') ?? 0;
+            
+        $totalWithdrawn = Withdrawal::where('status', 'completed')->sum('amount');
+        
+        $balance = (int)$totalNetSales - (int)$totalWithdrawn;
 
         return Inertia::render('tenant/withdrawals/index', [
             'methods' => $methods,

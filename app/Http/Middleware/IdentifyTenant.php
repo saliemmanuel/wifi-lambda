@@ -61,19 +61,9 @@ class IdentifyTenant
                 }
             }
 
-            // Security: Prevent Session Leakage between Tenants
-            if (session()->has('tenant_context_slug')) {
-                if (session('tenant_context_slug') !== $slug) {
-                    // Mismatch detected: The user (or guest) came from another tenant.
-                    if (auth()->check()) {
-                        auth()->logout();
-                    }
-                    session()->invalidate();
-                    session()->regenerateToken();
-                    session(['tenant_context_slug' => $slug]);
-                }
-            } else {
-                session(['tenant_context_slug' => $slug]);
+            // Set Session Context safely
+            if (session('current_tenant_slug') !== $slug) {
+                session(['current_tenant_slug' => $slug]);
             }
         }
 

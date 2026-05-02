@@ -31,17 +31,11 @@ class CheckTenantSession
             // If the session tenant doesn't match the route tenant
             if ($sessionTenantSlug && $sessionTenantSlug !== $routeTenantSlug) {
                 // Security breach attempt or unintentional navigation detected
-                
-                // Logout the user
                 Auth::guard('web')->logout();
-
-                // Invalidate the session
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
-                // Redirect to the login page of the NEW tenant
-                return redirect()->route('tenant.login', ['tenant_slug' => $routeTenantSlug])
-                    ->withErrors(['email' => 'Session expirée car vous avez changé d\'espace. Veuillez vous reconnecter.']);
+                session(['current_tenant_slug' => $routeTenantSlug]);
+                
+                return redirect()->route('home')
+                    ->with('error', 'Votre session a été réinitialisée car vous avez changé d\'espace.');
             }
 
             // If user is logged in but session has no tenant_slug (legacy or edge case), set it
