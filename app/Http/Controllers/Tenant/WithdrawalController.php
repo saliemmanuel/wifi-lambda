@@ -29,28 +29,16 @@ class WithdrawalController extends Controller
             ->limit(10)
             ->get();
 
-        // Calculate current balance (reseller net profit - withdrawals)
-        $payments = Payment::where('tenant_id', $tenant->id)
+        // Calculate current balance efficiently
+        $totalNetSales = Payment::where('tenant_id', $tenant->id)
             ->where('payment_type', 'ticket')
             ->whereIn('status', ['paid', 'completed', 'success'])
-            ->get();
-            
-        $totalNetSales = 0;
-        foreach ($payments as $payment) {
-            $resellerAmount = (int) $payment->reseller_amount_fcfa;
-            if ($payment->platform_commission_fcfa == 0) {
-                // Business Plan: Reseller pays 3% fee
-                $aggregatorFee = (int) round($payment->amount_fcfa * 0.03);
-                $totalNetSales += ($resellerAmount - $aggregatorFee);
-            } else {
-                // Free Plan: Admin pays fee, Reseller gets full reseller_amount
-                $totalNetSales += $resellerAmount;
-            }
-        }
+            ->selectRaw('SUM(CASE WHEN platform_commission_fcfa = 0 THEN reseller_amount_fcfa - ROUND(amount_fcfa * 0.03) ELSE reseller_amount_fcfa END) as net_sales')
+            ->value('net_sales') ?? 0;
             
         $totalWithdrawn = Withdrawal::where('status', 'completed')->sum('amount');
         
-        $balance = $totalNetSales - $totalWithdrawn;
+        $balance = (int)$totalNetSales - (int)$totalWithdrawn;
 
         return Inertia::render('tenant/withdrawals/index', [
             'methods' => $methods,
