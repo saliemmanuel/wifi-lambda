@@ -34,9 +34,9 @@ class CreateNewUser implements CreatesNewUsers
         try {
             $tenantService = app(\App\Services\TenantService::class);
             
-            // Generate a unique random hash for the slug
+            // Generate a unique UUID for the slug
             do {
-                $finalSlug = \Illuminate\Support\Str::random(8);
+                $finalSlug = (string) \Illuminate\Support\Str::uuid();
             } while (\App\Models\Tenant::where('slug', $finalSlug)->exists());
 
             $tenantService->setupNewTenant($user, $input['name'], $finalSlug);
