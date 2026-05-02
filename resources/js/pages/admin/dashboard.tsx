@@ -99,13 +99,13 @@ export default function AdminDashboard({ stats, recentTenants, charts, recentTra
 
                     <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Revenu des Zones</span>
+                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Solde des Zones</span>
                             <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
                                 <TrendingUp className="h-5 w-5 text-indigo-600" />
                             </div>
                         </div>
                         <div className="text-3xl font-black tracking-tight text-foreground">{(stats.resellerRevenue || 0).toLocaleString()} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span></div>
-                        <p className="text-xs font-bold text-muted-foreground">Somme totale reversée aux zones</p>
+                        <p className="text-xs font-bold text-muted-foreground">Solde restant à reverser aux zones</p>
                     </div>
                 </div>
 

@@ -39,12 +39,27 @@ class DashboardController extends Controller
             }
         }
 
+        $totalResellerWithdrawals = 0;
+        $tenantService = app(\App\Services\TenantService::class);
+        $tenants = Tenant::all();
+
+        foreach ($tenants as $tenant) {
+            try {
+                $tenantService->switchTo($tenant);
+                $totalResellerWithdrawals += \App\Models\Tenant\Withdrawal::where('status', 'completed')->sum('amount');
+            } catch (\Exception $e) {
+                // Skip if DB doesn't exist or other error
+                continue;
+            }
+        }
+
         $stats = [
-            'totalTenants' => Tenant::count(),
+            'totalTenants' => $tenants->count(),
             'activeSubscriptions' => Subscription::where('status', 'active')->count(),
             'totalRevenue' => $grossTotalVolume,
             'platformRevenue' => $netPlatformRevenue,
-            'resellerRevenue' => $totalResellerRevenue,
+            'resellerRevenue' => $totalResellerRevenue - $totalResellerWithdrawals,
+            'totalWithdrawnByResellers' => $totalResellerWithdrawals,
             'newTenantsThisMonth' => Tenant::whereYear('created_at', now()->year)
                 ->whereMonth('created_at', now()->month)
                 ->count(),
