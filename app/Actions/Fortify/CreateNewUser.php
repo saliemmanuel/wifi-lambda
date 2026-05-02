@@ -30,17 +30,14 @@ class CreateNewUser implements CreatesNewUsers
             'password' => \Illuminate\Support\Facades\Hash::make($input['password']),
         ]);
 
-        // Create Tenant automatically
+        // Create Tenant automatically with a random hash as slug
         try {
             $tenantService = app(\App\Services\TenantService::class);
-            $slug = \Illuminate\Support\Str::slug($input['name']);
             
-            // Ensure unique slug
-            $finalSlug = $slug;
-            $count = 1;
-            while (\App\Models\Tenant::where('slug', $finalSlug)->exists()) {
-                $finalSlug = $slug . '-' . $count++;
-            }
+            // Generate a unique random hash for the slug
+            do {
+                $finalSlug = \Illuminate\Support\Str::random(8);
+            } while (\App\Models\Tenant::where('slug', $finalSlug)->exists());
 
             $tenantService->setupNewTenant($user, $input['name'], $finalSlug);
         } catch (\Exception $e) {
