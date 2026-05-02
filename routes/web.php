@@ -28,13 +28,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('tenant.dashboard', ['tenant_slug' => $tenant->slug]);
         }
 
-        // 3. New User? Go to setup
-        return redirect()->route('setup.index');
+        // 3. New User? Rediriger vers la home ou une page de création
+        return redirect()->route('home');
     })->name('dashboard');
 
-    // Tenant Setup
-    Route::get('/setup-tenant', [\App\Http\Controllers\SetupTenantController::class, 'index'])->name('setup.index');
-    Route::post('/setup-tenant', [\App\Http\Controllers\SetupTenantController::class, 'store'])->name('setup.store');
+
 
     Route::prefix('admin')->name('admin.')->middleware('super-admin')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
