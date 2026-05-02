@@ -65,7 +65,7 @@ class WithdrawalController extends Controller
     public function requestWithdrawal(Request $request)
     {
         $validated = $request->validate([
-            'amount_fcfa' => 'required|integer|min:500',
+            'amount_fcfa' => 'required|integer|min:100',
             'method_id' => 'required|exists:platform_withdrawal_methods,id',
         ]);
 

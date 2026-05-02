@@ -283,6 +283,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                                                         type="number"
                                                         placeholder="CFA"
                                                         className="text-lg font-semibold h-12 pr-12"
+                                                        min="100"
                                                         value={withdrawalData.amount_fcfa}
                                                         onChange={e => setWithdrawalData('amount_fcfa', e.target.value)}
                                                         required
