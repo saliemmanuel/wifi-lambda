@@ -31,9 +31,9 @@ interface Withdrawal {
     status: string;
     reference: string;
     created_at: string;
-    method: {
-        label: string;
-        phone_number: string;
+    method?: {
+        label?: string;
+        phone_number?: string;
     };
 }
 
@@ -46,23 +46,28 @@ interface WithdrawalsIndexProps {
     tenant: any;
 }
 
-export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant }: WithdrawalsIndexProps) {
+export default function WithdrawalsIndex({ 
+    withdrawals = { data: [] }, 
+    methods = [], 
+    balance = 0, 
+    tenant = { slug: '', name: '' } 
+}: WithdrawalsIndexProps) {
     const [isAddingMethod, setIsAddingMethod] = useState(false);
     const [showInfo, setShowInfo] = useState(true);
 
     const { data: withdrawalData, setData: setWithdrawalData, post: postWithdrawal, processing: processingWithdrawal, reset: resetWithdrawal, errors: withdrawalErrors } = useForm({
         amount: '',
-        method_id: methods.find(m => m.is_default)?.id || methods[0]?.id || '',
+        method_id: methods?.find(m => m.is_default)?.id || methods?.[0]?.id || '',
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('tenant.dashboard', { tenant_slug: tenant.slug }) },
+        { title: 'Dashboard', href: route('tenant.dashboard', { tenant_slug: tenant?.slug || '' }) },
         { title: 'Retraits', href: '#' },
     ];
 
     const handleInitiateWithdrawal = (e: React.FormEvent) => {
         e.preventDefault();
-        postWithdrawal(route('tenant.withdrawals.store', { tenant_slug: tenant.slug }), {
+        postWithdrawal(route('tenant.withdrawals.store', { tenant_slug: tenant?.slug || '' }), {
             onSuccess: () => resetWithdrawal(),
         });
     };
@@ -71,7 +76,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Mes Retraits" />
 
-            <div className="flex h-full flex-1 flex-col gap-8 overflow-x-auto rounded-xl p-6">
+            <div className="flex h-full flex-1 flex-col gap-8 overflow-x-auto rounded-xl p-6 font-sans">
                 
                 {/* Top Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -87,7 +92,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                                 <Wallet className="h-5 w-5 text-emerald-600" />
                             </div>
                         </div>
-                        <div className="text-3xl font-black tracking-tight text-foreground">
+                        <div className="text-3xl font-black tracking-tight text-foreground tabular-nums">
                             {new Intl.NumberFormat().format(balance)} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span>
                         </div>
                     </div>
@@ -99,7 +104,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                         <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
                         <div className="flex-1">
                             <p className="text-[11px] font-black uppercase tracking-widest text-blue-700">Consignes de retrait</p>
-                            <p className="text-xs font-bold text-blue-600/80 mt-1 leading-relaxed">
+                            <p className="text-xs font-bold text-blue-600/80 mt-1 leading-relaxed italic">
                                 Les fonds sont transférés vers vos comptes Mobile Money configurés. Assurez-vous que les numéros sont actifs.
                             </p>
                         </div>
@@ -128,12 +133,12 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {methods.map((method) => (
+                                {methods?.map((method) => (
                                     <div key={method.id} className="flex flex-col gap-4 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md group">
                                         <div className="flex items-center justify-between">
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{method.label || 'Compte'}</span>
-                                                <span className="text-xl font-black tracking-tight text-foreground mt-1 tabular-nums italic">{method.phone_number}</span>
+                                                <span className="text-xl font-black tracking-tight text-foreground mt-1 tabular-nums italic tracking-widest">{method.phone_number}</span>
                                             </div>
                                             <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                                 <Phone className="h-4 w-4" />
@@ -148,11 +153,18 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                                         </div>
                                     </div>
                                 ))}
+
+                                {methods?.length === 0 && (
+                                    <div className="md:col-span-2 py-10 border-2 border-dashed border-border/50 rounded-2xl flex flex-col items-center justify-center text-muted-foreground gap-2">
+                                        <Phone className="h-8 w-8 opacity-20" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Aucun numéro configuré</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Request Form */}
-                        {methods.length > 0 && (
+                        {methods?.length > 0 && (
                             <div className="rounded-[2rem] border border-border/50 bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
                                 <div className="p-8 border-b border-border/30 bg-slate-50/30">
                                     <h3 className="text-lg font-black uppercase tracking-tight italic text-foreground">Initier un Retrait</h3>
@@ -165,7 +177,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                                             <div className="relative">
                                                 <Input 
                                                     type="number"
-                                                    className="h-12 rounded-xl font-black text-xl border-border/50 focus:border-indigo-600 transition-all pr-12"
+                                                    className="h-12 rounded-xl font-black text-xl border-border/50 focus:border-indigo-600 transition-all pr-12 tabular-nums"
                                                     value={withdrawalData.amount}
                                                     onChange={e => setWithdrawalData('amount', e.target.value)}
                                                     required
@@ -174,7 +186,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                                             </div>
                                             <div className="flex justify-between px-1">
                                                 <span className="text-[9px] font-black text-muted-foreground uppercase">Min: 100 CFA</span>
-                                                <span className="text-[9px] font-black text-emerald-600 uppercase">Max: {balance.toLocaleString()} CFA</span>
+                                                <span className="text-[9px] font-black text-emerald-600 uppercase">Max: {balance?.toLocaleString()} CFA</span>
                                             </div>
                                         </div>
                                         <div className="space-y-3">
@@ -184,7 +196,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                                                 value={withdrawalData.method_id}
                                                 onChange={e => setWithdrawalData('method_id', e.target.value)}
                                             >
-                                                {methods.map(m => (
+                                                {methods?.map(m => (
                                                     <option key={m.id} value={m.id}>{m.phone_number} ({m.label || 'Momo'})</option>
                                                 ))}
                                             </select>
@@ -206,13 +218,13 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
 
                     {/* Right Column: History */}
                     <div className="lg:col-span-4 space-y-6">
-                        <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center justify-between px-1 border-b border-border/30 pb-4">
                             <h2 className="text-lg font-black uppercase tracking-tight italic text-foreground">Historique</h2>
                             <HistoryIcon className="h-4 w-4 text-muted-foreground opacity-30" />
                         </div>
 
                         <div className="space-y-4">
-                            {withdrawals.data.map((w) => (
+                            {withdrawals?.data?.map((w) => (
                                 <div key={w.id} className="flex flex-col gap-4 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md group">
                                     <div className="flex justify-between items-center">
                                         <Badge className={cn(
@@ -228,14 +240,21 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
                                     </div>
                                     <div className="flex justify-between items-end">
                                         <div className="flex flex-col">
-                                            <span className="text-lg font-black tracking-tight text-foreground tabular-nums italic">{w.amount.toLocaleString()} <span className="text-[10px] opacity-40 uppercase not-italic">CFA</span></span>
+                                            <span className="text-lg font-black tracking-tight text-foreground tabular-nums italic">{w.amount?.toLocaleString()} <span className="text-[10px] opacity-40 uppercase not-italic">CFA</span></span>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-[9px] font-black text-foreground italic uppercase">*{w.method?.phone_number.slice(-4)}</span>
+                                            <span className="text-[9px] font-black text-foreground italic uppercase">*{w.method?.phone_number?.slice(-4)}</span>
                                         </div>
                                     </div>
                                 </div>
                             ))}
+
+                            {withdrawals?.data?.length === 0 && (
+                                <div className="py-20 text-center flex flex-col items-center gap-3 opacity-20">
+                                    <HistoryIcon className="h-10 w-10" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Aucun historique</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
