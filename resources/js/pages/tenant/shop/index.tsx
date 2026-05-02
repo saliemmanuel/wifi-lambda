@@ -362,14 +362,11 @@ export default function ShopIndex({ packages, tenant_slug, current_zone }: Props
                                     )}
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="phone">Numéro Mobile Money (Cameroun)</Label>
+                                        <Label htmlFor="phone">Numéro Mobile Money</Label>
                                         <div className="flex gap-2">
-                                            <div className="flex items-center justify-center px-3 border rounded-md bg-muted text-sm font-medium">
-                                                +237
-                                            </div>
                                             <Input
                                                 id="phone"
-                                                placeholder="6XXXXXXXX"
+                                                placeholder="Numéro de téléphone"
                                                 className="flex-1"
                                                 value={phoneNumber}
                                                 onChange={e => setPhoneNumber(e.target.value)}

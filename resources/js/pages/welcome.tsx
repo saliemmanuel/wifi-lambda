@@ -230,7 +230,7 @@ export default function Welcome({
                 {/* Footer */}
                 <footer className="border-t py-8 mt-12 bg-muted/50">
                     <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center text-muted-foreground text-sm">
-                        <p>&copy; {new Date().getFullYear()} ZAWIFI. Fait avec ❤️ au Cameroun 🇨🇲.</p>
+                        <p>&copy; {new Date().getFullYear()} ZAWIFI. Fait avec ❤️.</p>
                         <div className="flex gap-4 mt-4 sm:mt-0">
                             <Link href="#" className="hover:underline">Conditions</Link>
                             <Link href="#" className="hover:underline">Confidentialité</Link>
