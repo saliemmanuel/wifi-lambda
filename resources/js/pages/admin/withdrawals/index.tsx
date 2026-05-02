@@ -15,7 +15,6 @@ import {
     ArrowUpRight,
     Wallet,
     ArrowRight,
-    MoreVertical,
     Clock,
     AlertCircle,
     ExternalLink,
@@ -37,9 +36,9 @@ interface Withdrawal {
     status: string;
     reference: string;
     created_at: string;
-    method: {
-        label: string;
-        phone_number: string;
+    method?: {
+        label?: string;
+        phone_number?: string;
     };
 }
 
@@ -53,7 +52,7 @@ interface WithdrawalsIndexProps {
     };
 }
 
-export default function WithdrawalsIndex({ withdrawals, methods, stats }: WithdrawalsIndexProps) {
+export default function WithdrawalsIndex({ withdrawals = { data: [] }, methods = [], stats = { availableBalanceFcfa: 0 } }: WithdrawalsIndexProps) {
     const [isAddingMethod, setIsAddingMethod] = useState(false);
 
     const { data: methodData, setData: setMethodData, post: postMethod, processing: processingMethod, reset: resetMethod, errors: methodErrors } = useForm({
@@ -63,7 +62,7 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
 
     const { data: withdrawalData, setData: setWithdrawalData, post: postWithdrawal, processing: processingWithdrawal, reset: resetWithdrawal, errors: withdrawalErrors } = useForm({
         amount_fcfa: '',
-        method_id: methods.find(m => m.is_default)?.id || methods[0]?.id || '',
+        method_id: methods?.find(m => m.is_default)?.id || methods?.[0]?.id || '',
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -92,17 +91,17 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin — Payouts" />
 
-            <div className="max-w-[1200px] mx-auto px-6 py-12 space-y-12 bg-white min-h-screen">
+            <div className="max-w-[1200px] mx-auto px-6 py-12 space-y-12 bg-white min-h-screen font-sans">
                 
                 {/* Vercel Style Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start border-b border-gray-100 pb-10 gap-8">
                     <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
                             <Wallet className="h-3 w-3" />
                             <span>Platform Treasury</span>
                         </div>
                         <h1 className="text-4xl font-bold tracking-tighter text-black">Payouts</h1>
-                        <p className="text-gray-500 text-[15px] font-medium">Manage and withdraw your platform revenue securely.</p>
+                        <p className="text-gray-500 text-[15px] font-medium tracking-tight">Manage and withdraw your platform revenue securely.</p>
                     </div>
                     
                     <div className="flex flex-col items-end gap-4">
@@ -110,14 +109,14 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">Available to withdraw</span>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-4xl font-bold tracking-tighter tabular-nums text-black">
-                                    {new Intl.NumberFormat().format(stats.availableBalanceFcfa)}
+                                    {new Intl.NumberFormat().format(stats?.availableBalanceFcfa || 0)}
                                 </span>
                                 <span className="text-sm font-bold text-gray-400 uppercase">XAF</span>
                             </div>
                         </div>
                         <Button 
                             onClick={() => setIsAddingMethod(!isAddingMethod)}
-                            className="bg-black hover:bg-[#111] text-white rounded-md px-6 h-10 font-medium transition-all text-sm"
+                            className="bg-black hover:bg-[#111] text-white rounded-md px-6 h-10 font-bold transition-all text-xs uppercase tracking-widest"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Connect Account
@@ -132,25 +131,25 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                         
                         {/* Connected Accounts Section */}
                         <div className="space-y-6">
-                            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">Linked Mobile Methods</h2>
+                            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-[0.3em] px-1">Linked Mobile Methods</h2>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {isAddingMethod && (
                                     <div className="border border-gray-200 rounded-lg p-6 space-y-4 bg-gray-50/50 animate-in fade-in duration-200">
                                         <div className="space-y-3">
                                             <div className="space-y-1.5">
-                                                <Label className="text-[11px] font-bold text-gray-500 uppercase">Phone Number</Label>
+                                                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Phone Number</Label>
                                                 <Input 
-                                                    className="h-9 rounded-md border-gray-200 focus:ring-black focus:border-black text-sm"
+                                                    className="h-10 rounded-md border-gray-200 focus:ring-black focus:border-black text-sm font-bold"
                                                     value={methodData.phone_number}
                                                     onChange={e => setMethodData('phone_number', e.target.value)}
                                                     placeholder="237..."
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[11px] font-bold text-gray-500 uppercase">Label</Label>
+                                                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Label</Label>
                                                 <Input 
-                                                    className="h-9 rounded-md border-gray-200 focus:ring-black focus:border-black text-sm"
+                                                    className="h-10 rounded-md border-gray-200 focus:ring-black focus:border-black text-sm font-bold"
                                                     value={methodData.label}
                                                     onChange={e => setMethodData('label', e.target.value)}
                                                     placeholder="Account name"
@@ -158,13 +157,13 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setIsAddingMethod(false)}>Cancel</Button>
-                                            <Button size="sm" className="flex-1 bg-black text-white text-xs" onClick={handleAddMethod} disabled={processingMethod}>Save</Button>
+                                            <Button size="sm" variant="outline" className="flex-1 text-[10px] font-bold uppercase" onClick={() => setIsAddingMethod(false)}>Cancel</Button>
+                                            <Button size="sm" className="flex-1 bg-black text-white text-[10px] font-bold uppercase h-9" onClick={handleAddMethod} disabled={processingMethod}>Save</Button>
                                         </div>
                                     </div>
                                 )}
 
-                                {methods.map((method) => (
+                                {methods?.map((method) => (
                                     <div key={method.id} className="group relative border border-gray-200 rounded-lg p-6 hover:border-black transition-colors bg-white">
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="p-2 bg-gray-50 rounded-md">
@@ -175,8 +174,8 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                                             )}
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-sm font-bold text-black tabular-nums">{method.phone_number}</p>
-                                            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-tight">{method.label || 'Mobile Account'}</p>
+                                            <p className="text-sm font-bold text-black tabular-nums tracking-tight">{method.phone_number}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{method.label || 'Mobile Account'}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -186,44 +185,44 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                         {/* Payout Request Form */}
                         <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                             <div className="px-8 py-6 border-b border-gray-100 bg-gray-50/30">
-                                <h3 className="text-[15px] font-bold text-black">Request a Payout</h3>
-                                <p className="text-xs text-gray-500 mt-1">Select an account and specify the amount to withdraw.</p>
+                                <h3 className="text-sm font-bold text-black uppercase tracking-widest">Request a Payout</h3>
+                                <p className="text-[11px] text-gray-500 mt-1 font-medium">Select an account and specify the amount to withdraw.</p>
                             </div>
                             
                             <form onSubmit={handleInitiateWithdrawal} className="p-8 space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-2.5">
-                                        <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Amount (XAF)</Label>
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Amount (XAF)</Label>
                                         <div className="relative group">
                                             <Input 
                                                 type="number"
-                                                className="h-11 rounded-md border-gray-200 font-mono text-base focus:ring-black focus:border-black pr-14 transition-all"
+                                                className="h-12 rounded-md border-gray-200 font-mono text-base font-bold focus:ring-black focus:border-black pr-14 transition-all"
                                                 value={withdrawalData.amount_fcfa}
                                                 onChange={e => setWithdrawalData('amount_fcfa', e.target.value)}
                                                 required
                                             />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-300">XAF</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px] font-bold px-1">
-                                            <span className="text-gray-300 uppercase tracking-[0.1em]">Minimum 100 CFA</span>
+                                        <div className="flex justify-between items-center text-[9px] font-bold px-1">
+                                            <span className="text-gray-300 uppercase tracking-widest">Minimum 100 CFA</span>
                                             <button 
                                                 type="button"
-                                                onClick={() => setWithdrawalData('amount_fcfa', stats.availableBalanceFcfa.toString())}
-                                                className="text-black hover:underline underline-offset-4 decoration-gray-300"
+                                                onClick={() => setWithdrawalData('amount_fcfa', (stats?.availableBalanceFcfa || 0).toString())}
+                                                className="text-black hover:underline underline-offset-4 decoration-gray-300 uppercase tracking-tighter"
                                             >
-                                                Withdraw Maximum
+                                                Withdraw Max
                                             </button>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2.5">
-                                        <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Destination Account</Label>
+                                    <div className="space-y-3">
+                                        <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Destination Account</Label>
                                         <select 
-                                            className="w-full h-11 bg-white border border-gray-200 rounded-md px-4 text-sm font-bold outline-none focus:ring-1 focus:ring-black focus:border-black transition-all appearance-none cursor-pointer"
+                                            className="w-full h-12 bg-white border border-gray-200 rounded-md px-4 text-[11px] font-bold uppercase tracking-tight outline-none focus:ring-1 focus:ring-black focus:border-black transition-all appearance-none cursor-pointer"
                                             value={withdrawalData.method_id}
                                             onChange={e => setWithdrawalData('method_id', e.target.value)}
                                         >
-                                            {methods.map(m => (
+                                            {methods?.map(m => (
                                                 <option key={m.id} value={m.id}>{m.phone_number} — {m.label || 'Momo'}</option>
                                             ))}
                                         </select>
@@ -232,8 +231,8 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
 
                                 <div className="p-4 rounded-lg border border-gray-100 bg-gray-50/50 flex items-start gap-3">
                                     <AlertCircle className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                                    <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
-                                        Payouts are processed immediately. Verification and network delays may occur. View deployment status in your history.
+                                    <p className="text-[11px] text-gray-500 font-medium leading-relaxed italic">
+                                        Payouts are processed immediately. Verification and network delays may occur.
                                     </p>
                                 </div>
 
@@ -241,9 +240,9 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
                                     <Button 
                                         type="submit"
                                         disabled={processingWithdrawal || !withdrawalData.amount_fcfa}
-                                        className="bg-black hover:bg-[#111] text-white rounded-md px-12 h-11 font-bold shadow-lg shadow-black/10 transition-all uppercase text-[11px] tracking-[0.2em]"
+                                        className="bg-black hover:bg-[#111] text-white rounded-md px-12 h-12 font-bold shadow-lg shadow-black/10 transition-all uppercase text-[11px] tracking-[0.3em]"
                                     >
-                                        {processingWithdrawal ? 'Processing...' : 'Confirm Payout'}
+                                        {processingWithdrawal ? 'Wait...' : 'Confirm Payout'}
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 </div>
@@ -253,52 +252,48 @@ export default function WithdrawalsIndex({ withdrawals, methods, stats }: Withdr
 
                     {/* Right Column: History List */}
                     <div className="lg:col-span-5 space-y-6">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                            <h3 className="text-xs font-bold text-black uppercase tracking-[0.2em]">Deployment History</h3>
-                            <div className="flex items-center gap-2 text-gray-400">
-                                <Search className="h-4 w-4" />
-                                <ExternalLink className="h-4 w-4" />
-                            </div>
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-4 px-1">
+                            <h3 className="text-xs font-bold text-black uppercase tracking-[0.3em]">Activity</h3>
+                            <ExternalLink className="h-3 w-3 text-gray-300" />
                         </div>
 
                         <div className="space-y-4">
-                            {withdrawals.data.length > 0 ? withdrawals.data.map((w) => (
+                            {withdrawals?.data?.length > 0 ? withdrawals.data.map((w) => (
                                 <div key={w.id} className="group border border-gray-200 rounded-lg p-5 hover:bg-gray-50/50 transition-all">
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-3">
                                             <div className={cn(
                                                 "h-2 w-2 rounded-full",
-                                                w.status === 'completed' ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : 
+                                                w.status === 'completed' ? "bg-green-500" : 
                                                 w.status === 'processing' ? "bg-blue-500 animate-pulse" : "bg-red-500"
                                             )} />
-                                            <p className="text-sm font-bold text-black tabular-nums">
-                                                {w.amount_fcfa.toLocaleString()} <span className="text-[10px] font-medium text-gray-400">XAF</span>
+                                            <p className="text-sm font-bold text-black tabular-nums tracking-tight">
+                                                {w.amount_fcfa?.toLocaleString()} <span className="text-[10px] font-medium text-gray-400 uppercase">XAF</span>
                                             </p>
                                         </div>
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tabular-nums">
-                                            {new Date(w.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                            {new Date(w.created_at).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="text-[9px] font-mono border-gray-200 text-gray-500 uppercase tracking-tighter">
-                                                {w.reference.slice(0, 7)}
+                                            <Badge variant="outline" className="text-[8px] font-mono border-gray-200 text-gray-400 uppercase tracking-tighter">
+                                                {w.reference?.slice(0, 8)}
                                             </Badge>
-                                            <span className="text-[9px] font-bold text-gray-300 uppercase italic">/ {w.method?.label || 'payout'}</span>
+                                            <span className="text-[9px] font-bold text-gray-300 uppercase italic">/ {w.method?.label || 'out'}</span>
                                         </div>
-                                        <span className="text-[10px] font-mono text-gray-400">*{w.method?.phone_number.slice(-4)}</span>
+                                        <span className="text-[10px] font-mono text-gray-300">*{w.method?.phone_number?.slice(-4)}</span>
                                     </div>
                                 </div>
                             )) : (
                                 <div className="py-24 text-center border border-dashed border-gray-100 rounded-lg">
-                                    <Clock className="h-8 w-8 mx-auto text-gray-100 mb-2" />
-                                    <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">No deployments yet</p>
+                                    <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.4em]">Empty</p>
                                 </div>
                             )}
                         </div>
                         
-                        <Button variant="outline" className="w-full h-10 border-gray-100 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-black uppercase tracking-widest">
-                            View All Events
+                        <Button variant="outline" className="w-full h-10 border-gray-100 text-[10px] font-bold text-gray-400 hover:bg-gray-50 hover:text-black uppercase tracking-[0.3em]">
+                            Full History
                         </Button>
                     </div>
                 </div>
