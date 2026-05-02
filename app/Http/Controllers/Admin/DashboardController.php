@@ -14,61 +14,60 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $grossTotalVolume = Payment::where('status', 'completed')->sum('amount_fcfa');
-        
-        // Detailed revenue calculation based on plan responsibility
-        $payments = Payment::where('status', 'completed')->get();
-        
-        $netPlatformRevenue = 0;
-        $totalResellerRevenue = 0;
+        $stats = \Illuminate\Support\Facades\Cache::remember('admin_dashboard_stats', 60, function () {
+            $grossTotalVolume = Payment::where('status', 'completed')->sum('amount_fcfa');
+            
+            // Detailed revenue calculation
+            $payments = Payment::where('status', 'completed')->get();
+            
+            $netPlatformRevenue = 0;
+            $totalResellerRevenue = 0;
 
-        foreach ($payments as $payment) {
-            $amount = (int) $payment->amount_fcfa;
-            $commission = (int) $payment->platform_commission_fcfa;
-            $resellerAmount = (int) $payment->reseller_amount_fcfa;
-            $aggregatorFee = (int) round($amount * 0.03);
+            foreach ($payments as $payment) {
+                $amount = (int) $payment->amount_fcfa;
+                $commission = (int) $payment->platform_commission_fcfa;
+                $resellerAmount = (int) $payment->reseller_amount_fcfa;
+                $aggregatorFee = (int) round($amount * 0.03);
 
-            if ($commission > 0) {
-                // Free Plan: Admin pays fee from commission
-                $netPlatformRevenue += ($commission - $aggregatorFee);
-                $totalResellerRevenue += $resellerAmount;
-            } else {
-                // Business Plan: Reseller pays fee from their share
-                $netPlatformRevenue += 0;
-                $totalResellerRevenue += ($resellerAmount - $aggregatorFee);
+                if ($commission > 0) {
+                    $netPlatformRevenue += ($commission - $aggregatorFee);
+                    $totalResellerRevenue += $resellerAmount;
+                } else {
+                    $totalResellerRevenue += ($resellerAmount - $aggregatorFee);
+                }
             }
-        }
 
-        $totalResellerWithdrawals = 0;
-        $tenantService = app(\App\Services\TenantService::class);
-        $tenants = Tenant::all();
+            $totalResellerWithdrawals = 0;
+            $tenantService = app(\App\Services\TenantService::class);
+            $tenants = Tenant::all();
 
-        foreach ($tenants as $tenant) {
-            try {
-                $tenantService->switchTo($tenant);
-                $totalResellerWithdrawals += \App\Models\Tenant\Withdrawal::where('status', 'completed')->sum('amount');
-            } catch (\Exception $e) {
-                // Skip if DB doesn't exist or other error
-                continue;
+            foreach ($tenants as $tenant) {
+                try {
+                    $tenantService->switchTo($tenant);
+                    $totalResellerWithdrawals += \App\Models\Tenant\Withdrawal::where('status', 'completed')->sum('amount');
+                } catch (\Exception $e) {
+                    continue;
+                }
             }
-        }
 
-        $stats = [
-            'totalTenants' => $tenants->count(),
-            'activeSubscriptions' => Subscription::where('status', 'active')->count(),
-            'totalRevenue' => $grossTotalVolume,
-            'platformRevenue' => $netPlatformRevenue,
-            'resellerRevenue' => $totalResellerRevenue - $totalResellerWithdrawals,
-            'totalWithdrawnByResellers' => $totalResellerWithdrawals,
-            'newTenantsThisMonth' => Tenant::whereYear('created_at', now()->year)
-                ->whereMonth('created_at', now()->month)
-                ->count(),
-        ];
+            return [
+                'totalTenants' => $tenants->count(),
+                'activeSubscriptions' => Subscription::where('status', 'active')->count(),
+                'totalRevenue' => $grossTotalVolume,
+                'platformRevenue' => $netPlatformRevenue,
+                'resellerRevenue' => $totalResellerRevenue - $totalResellerWithdrawals,
+                'totalWithdrawnByResellers' => $totalResellerWithdrawals,
+                'newTenantsThisMonth' => Tenant::whereYear('created_at', now()->year)
+                    ->whereMonth('created_at', now()->month)
+                    ->count(),
+            ];
+        });
 
         $recentTenants = Tenant::with('plan')
             ->latest()
             ->limit(5)
             ->get();
+
 
         // Stats for chart (last 7 days - Net Platform Revenue)
         $labels = [];
