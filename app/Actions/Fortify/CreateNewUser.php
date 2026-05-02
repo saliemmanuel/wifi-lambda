@@ -24,10 +24,27 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'password' => \Illuminate\Support\Facades\Hash::make($input['password']),
-        ]);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($input) {
+            $user = User::create([
+                'name' => $input['name'],
+                'email' => $input['email'],
+                'password' => \Illuminate\Support\Facades\Hash::make($input['password']),
+            ]);
+
+            // Create Tenant automatically
+            $tenantService = app(\App\Services\TenantService::class);
+            $slug = \Illuminate\Support\Str::slug($input['name']);
+            
+            // Ensure unique slug if needed (basic version)
+            $finalSlug = $slug;
+            $count = 1;
+            while (\App\Models\Tenant::where('slug', $finalSlug)->exists()) {
+                $finalSlug = $slug . '-' . $count++;
+            }
+
+            $tenantService->setupNewTenant($user, $input['name'], $finalSlug);
+
+            return $user;
+        });
     }
 }

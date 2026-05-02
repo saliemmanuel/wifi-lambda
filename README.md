@@ -577,9 +577,5 @@ furnished to do so, subject to the following conditions:
 
 ---
 
-<div align="center">
-
-**Fait avec ❤️ au Cameroun 🇨🇲**
-
 *Version 1.0.0 - Février 2026*
 
