@@ -24,18 +24,18 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($input) {
-            $user = User::create([
-                'name' => $input['name'],
-                'email' => $input['email'],
-                'password' => \Illuminate\Support\Facades\Hash::make($input['password']),
-            ]);
+        $user = User::create([
+            'name' => $input['name'],
+            'email' => $input['email'],
+            'password' => \Illuminate\Support\Facades\Hash::make($input['password']),
+        ]);
 
-            // Create Tenant automatically
+        // Create Tenant automatically
+        try {
             $tenantService = app(\App\Services\TenantService::class);
             $slug = \Illuminate\Support\Str::slug($input['name']);
             
-            // Ensure unique slug if needed (basic version)
+            // Ensure unique slug
             $finalSlug = $slug;
             $count = 1;
             while (\App\Models\Tenant::where('slug', $finalSlug)->exists()) {
@@ -43,8 +43,12 @@ class CreateNewUser implements CreatesNewUsers
             }
 
             $tenantService->setupNewTenant($user, $input['name'], $finalSlug);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Auto-tenant creation failed for user {$user->id}: " . $e->getMessage());
+            // On laisse l'utilisateur créé, mais on log l'erreur. 
+            // Le dashboard redirigera vers la home s'il n'y a pas de tenant.
+        }
 
-            return $user;
-        });
+        return $user;
     }
 }
