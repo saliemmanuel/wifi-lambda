@@ -5,16 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-    Phone,
-    History as HistoryIcon,
-    Plus,
-    Info,
-    X,
-    CheckCircle2,
+import { 
+    Phone, 
+    History as HistoryIcon, 
+    Plus, 
+    Info, 
+    X, 
+    CheckCircle2, 
     ArrowUpRight,
     Wallet
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
 interface Method {
@@ -46,6 +47,7 @@ interface WithdrawalsIndexProps {
 }
 
 export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant }: WithdrawalsIndexProps) {
+    const [isAddingMethod, setIsAddingMethod] = useState(false);
     const [showInfo, setShowInfo] = useState(true);
 
     const { data: withdrawalData, setData: setWithdrawalData, post: postWithdrawal, processing: processingWithdrawal, reset: resetWithdrawal, errors: withdrawalErrors } = useForm({
@@ -67,178 +69,176 @@ export default function WithdrawalsIndex({ withdrawals, methods, balance, tenant
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Retraits" />
+            <Head title="Mes Retraits" />
 
-            <div className="max-w-6xl mx-auto p-6 md:p-10 bg-white min-h-screen">
-
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
+            <div className="flex h-full flex-1 flex-col gap-8 overflow-x-auto rounded-xl p-6">
+                
+                {/* Top Section */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Retraits</h1>
-                        <p className="text-slate-500 mt-2 text-lg">Gérez vos revenus et retirez vos fonds en toute sécurité.</p>
+                        <h1 className="text-3xl font-black uppercase tracking-tight italic text-foreground leading-none">Mes Retraits</h1>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-2">Récupérez vos gains de vente WiFi.</p>
                     </div>
 
-                    {/* Black Balance Card */}
-                    <div className="bg-[#1a1a1a] text-white p-8 rounded-[2rem] min-w-[280px] shadow-xl relative overflow-hidden">
-                        <div className="absolute top-4 right-4 opacity-10">
-                            <Wallet className="h-12 w-12" />
+                    <div className="flex flex-col gap-2 rounded-2xl border border-border/50 p-6 shadow-sm bg-card min-w-[280px]">
+                        <div className="flex items-center justify-between gap-8">
+                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Solde Retirable</span>
+                            <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
+                                <Wallet className="h-5 w-5 text-emerald-600" />
+                            </div>
                         </div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Solde disponible</p>
-                        <div className="flex items-baseline gap-2 mt-4">
-                            <span className="text-5xl font-bold tabular-nums">{new Intl.NumberFormat().format(balance)}</span>
-                            <span className="text-sm font-bold text-slate-400">FCFA</span>
+                        <div className="text-3xl font-black tracking-tight text-foreground">
+                            {new Intl.NumberFormat().format(balance)} <span className="text-sm font-bold opacity-50 uppercase">FCFA</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Info Alert */}
                 {showInfo && (
-                    <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-2xl p-5 mb-8 flex items-start gap-4 relative">
-                        <Info className="h-5 w-5 text-[#2563eb] mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-4 rounded-2xl border border-blue-100 bg-blue-50/50 p-5 dark:border-blue-500/10 dark:bg-blue-500/5 relative">
+                        <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
                         <div className="flex-1">
-                            <h4 className="text-[#1e40af] font-bold text-sm">Information sur les retraits</h4>
-                            <p className="text-[#1e40af] text-sm mt-1 opacity-80">
-                                Les numéros de téléphone affichés ci-dessous sont ceux utilisés pour vos retraits. Vous pouvez configurer jusqu'à 02 numéros de retrait.
+                            <p className="text-[11px] font-black uppercase tracking-widest text-blue-700">Consignes de retrait</p>
+                            <p className="text-xs font-bold text-blue-600/80 mt-1 leading-relaxed">
+                                Les fonds sont transférés vers vos comptes Mobile Money configurés. Assurez-vous que les numéros sont actifs.
                             </p>
                         </div>
-                        <button onClick={() => setShowInfo(false)} className="text-[#1e40af] opacity-50 hover:opacity-100 flex-shrink-0">
+                        <button onClick={() => setShowInfo(false)} className="text-blue-400 hover:text-blue-600 transition-colors">
                             <X className="h-4 w-4" />
                         </button>
                     </div>
                 )}
 
-                {/* Top row: Methods + History side by side */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left Column */}
+                    <div className="lg:col-span-8 space-y-8">
+                        
+                        {/* Accounts Grid */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between px-1">
+                                <h2 className="text-lg font-black uppercase tracking-tight italic text-foreground">Mes Numéros</h2>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 rounded-xl font-black text-[10px] uppercase tracking-widest border-indigo-500/20 text-indigo-600 hover:bg-indigo-50"
+                                >
+                                    <Plus className="h-3 w-3 mr-2" />
+                                    Ajouter
+                                </Button>
+                            </div>
 
-                    {/* Withdrawal Methods */}
-                    <div className="lg:col-span-8 space-y-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-3">
-                                <Phone className="h-5 w-5 text-slate-400" />
-                                Vos numéros de retrait
-                            </h2>
-                            <Button className="bg-[#1a1a1a] hover:bg-slate-800 text-white rounded-full px-5 h-10 font-bold text-sm">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Ajouter un numéro
-                            </Button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {methods.map((method) => (
+                                    <div key={method.id} className="flex flex-col gap-4 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md group">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{method.label || 'Compte'}</span>
+                                                <span className="text-xl font-black tracking-tight text-foreground mt-1 tabular-nums italic">{method.phone_number}</span>
+                                            </div>
+                                            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                                <Phone className="h-4 w-4" />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-auto">
+                                            {method.is_default && (
+                                                <Badge className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 border-none font-black text-[9px] uppercase tracking-widest px-2 h-5">
+                                                    Principal
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {methods.map((method, index) => (
-                                <div key={method.id} className="border border-slate-200 rounded-[2rem] p-8 space-y-4 hover:border-slate-300 transition-all">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Compte {index + 1}</p>
-                                    <div className="flex items-center gap-3">
-                                        <Phone className="h-5 w-5 text-slate-900" />
-                                        <span className="text-2xl font-bold text-slate-900 tabular-nums tracking-tight">{method.phone_number}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between pt-2">
-                                        <span className="text-sm font-bold text-slate-400 uppercase">{method.label || 'OM'}</span>
-                                        {method.is_default && (
-                                            <Badge className="bg-slate-100 text-slate-600 border-none font-bold text-[9px] uppercase tracking-widest px-3">
-                                                Par défaut
-                                            </Badge>
-                                        )}
-                                    </div>
+                        {/* Request Form */}
+                        {methods.length > 0 && (
+                            <div className="rounded-[2rem] border border-border/50 bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
+                                <div className="p-8 border-b border-border/30 bg-slate-50/30">
+                                    <h3 className="text-lg font-black uppercase tracking-tight italic text-foreground">Initier un Retrait</h3>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Indiquez le montant à retirer.</p>
                                 </div>
-                            ))}
-                        </div>
+                                <form onSubmit={handleInitiateWithdrawal} className="p-8 space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Montant souhaité</Label>
+                                            <div className="relative">
+                                                <Input 
+                                                    type="number"
+                                                    className="h-12 rounded-xl font-black text-xl border-border/50 focus:border-indigo-600 transition-all pr-12"
+                                                    value={withdrawalData.amount}
+                                                    onChange={e => setWithdrawalData('amount', e.target.value)}
+                                                    required
+                                                />
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase opacity-40">CFA</span>
+                                            </div>
+                                            <div className="flex justify-between px-1">
+                                                <span className="text-[9px] font-black text-muted-foreground uppercase">Min: 100 CFA</span>
+                                                <span className="text-[9px] font-black text-emerald-600 uppercase">Max: {balance.toLocaleString()} CFA</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vers le numéro</Label>
+                                            <select 
+                                                className="w-full h-12 bg-background border border-border/50 rounded-xl px-4 text-xs font-black uppercase italic outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all appearance-none cursor-pointer"
+                                                value={withdrawalData.method_id}
+                                                onChange={e => setWithdrawalData('method_id', e.target.value)}
+                                            >
+                                                {methods.map(m => (
+                                                    <option key={m.id} value={m.id}>{m.phone_number} ({m.label || 'Momo'})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <Button 
+                                        type="submit"
+                                        disabled={processingWithdrawal || !withdrawalData.amount}
+                                        className="w-full h-14 bg-foreground hover:bg-slate-800 text-background rounded-2xl font-black uppercase tracking-[0.2em] italic text-sm transition-all"
+                                    >
+                                        {processingWithdrawal ? 'Séquence en cours...' : 'Confirmer le retrait'}
+                                        <ArrowUpRight className="ml-2 h-5 w-5" />
+                                    </Button>
+                                </form>
+                            </div>
+                        )}
                     </div>
 
-                    {/* History Column */}
+                    {/* Right Column: History */}
                     <div className="lg:col-span-4 space-y-6">
-                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-3">
-                            <HistoryIcon className="h-5 w-5 text-slate-400" />
-                            Historique
-                        </h2>
+                        <div className="flex items-center justify-between px-1">
+                            <h2 className="text-lg font-black uppercase tracking-tight italic text-foreground">Historique</h2>
+                            <HistoryIcon className="h-4 w-4 text-muted-foreground opacity-30" />
+                        </div>
 
                         <div className="space-y-4">
                             {withdrawals.data.map((w) => (
-                                <div key={w.id} className="border border-slate-200 rounded-[1.5rem] p-6 space-y-3 hover:shadow-md transition-all">
+                                <div key={w.id} className="flex flex-col gap-4 rounded-2xl border border-border/50 p-6 shadow-sm bg-card transition-all hover:shadow-md group">
                                     <div className="flex justify-between items-center">
-                                        <Badge className="bg-[#dcfce7] text-[#166534] border-none text-[10px] font-bold uppercase tracking-widest px-3 py-1 flex items-center gap-1.5 w-fit">
-                                            <CheckCircle2 className="h-3 w-3 text-[#16a34a]" />
-                                            {w.status.toUpperCase()}
+                                        <Badge className={cn(
+                                            "text-[9px] font-black uppercase tracking-widest px-2 h-5 border-none",
+                                            w.status === 'completed' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" : 
+                                            w.status === 'processing' ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600" : "bg-amber-50 dark:bg-amber-500/10 text-amber-600"
+                                        )}>
+                                            {w.status}
                                         </Badge>
-                                        <span className="text-xs font-bold text-slate-400">
+                                        <span className="text-[9px] font-black text-muted-foreground uppercase">
                                             {new Date(w.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-end">
-                                        <div>
-                                            <p className="text-2xl font-bold text-slate-900 tabular-nums">
-                                                {new Intl.NumberFormat().format(w.amount)} <span className="text-xs font-bold text-slate-400">CFA</span>
-                                            </p>
-                                            <p className="text-[10px] text-slate-400 font-medium mt-1">Ref: {w.reference.slice(0, 12)}...</p>
+                                        <div className="flex flex-col">
+                                            <span className="text-lg font-black tracking-tight text-foreground tabular-nums italic">{w.amount.toLocaleString()} <span className="text-[10px] opacity-40 uppercase not-italic">CFA</span></span>
                                         </div>
-                                        <span className="text-xs font-bold text-slate-400 italic">
-                                            *{w.method?.phone_number.slice(-4)}
-                                        </span>
+                                        <div className="text-right">
+                                            <span className="text-[9px] font-black text-foreground italic uppercase">*{w.method?.phone_number.slice(-4)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </div>
-
-                {/* Withdrawal Form — full width below */}
-                <div className="border border-slate-200 rounded-[2rem] overflow-hidden">
-                    <div className="bg-slate-50/50 p-8 border-b border-slate-100">
-                        <h3 className="text-xl font-bold text-slate-900">Demande de Retrait</h3>
-                        <p className="text-sm text-slate-500 mt-1">Indiquez le montant à retirer sur le compte sélectionné.</p>
-                    </div>
-                    <form onSubmit={handleInitiateWithdrawal} className="p-8 space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-3">
-                                <Label className="text-sm font-bold text-slate-700">Montant (FCFA)</Label>
-                                <Input
-                                    type="number"
-                                    placeholder="Min: 100"
-                                    className="h-14 rounded-2xl border-slate-200 text-lg font-medium focus:ring-slate-900"
-                                    value={withdrawalData.amount}
-                                    onChange={e => setWithdrawalData('amount', e.target.value)}
-                                    required
-                                />
-                                <div className="flex justify-between px-1">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Min: 100 CFA</span>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Max: {new Intl.NumberFormat().format(balance)} CFA</span>
-                                </div>
-                                {withdrawalErrors.amount && (
-                                    <p className="text-red-500 text-xs">{withdrawalErrors.amount}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label className="text-sm font-bold text-slate-700">Vers le numéro</Label>
-                                <select
-                                    className="w-full h-14 bg-white border border-slate-200 rounded-2xl px-5 text-sm font-bold focus:ring-2 focus:ring-slate-900 outline-none appearance-none cursor-pointer"
-                                    value={withdrawalData.method_id}
-                                    onChange={e => setWithdrawalData('method_id', e.target.value)}
-                                >
-                                    {methods.map(m => (
-                                        <option key={m.id} value={m.id}>{m.phone_number} ({m.label || 'OM'})</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-2xl p-5 flex items-start gap-4">
-                            <Info className="h-5 w-5 text-[#d97706] mt-0.5 flex-shrink-0" />
-                            <p className="text-[#92400e] text-sm font-medium leading-relaxed">
-                                Les retraits sont généralement traités instantanément. Dans certains cas, cela peut prendre jusqu'à 24h selon les services.
-                            </p>
-                        </div>
-
-                        <Button
-                            type="submit"
-                            disabled={processingWithdrawal || !withdrawalData.amount}
-                            className="w-full h-16 bg-[#949494] hover:bg-slate-700 text-white rounded-2xl text-lg font-bold transition-all disabled:opacity-60"
-                        >
-                            Initier le retrait maintenant
-                            <ArrowUpRight className="ml-2 h-5 w-5" />
-                        </Button>
-                    </form>
-                </div>
-
             </div>
         </AppLayout>
     );
